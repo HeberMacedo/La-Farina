@@ -1,3 +1,4 @@
+@ -1,878 +0,0 @@
 <template>
   <div class="admin-page">
     <div class="container">
