@@ -21,7 +21,9 @@
       </router-link>
 
       <nav class="desktop-nav">
-        <router-link to="/menu">
+        <router-link
+          to="/menu"
+        >
           Cardápio
         </router-link>
 
@@ -83,6 +85,7 @@
           </div>
 
           <button
+            type="button"
             class="logout-button"
             @click="sair"
           >
@@ -123,9 +126,8 @@ export default {
         return "";
       }
 
-      return this.usuario.nome.split(
-        " "
-      )[0];
+      return this.usuario.nome
+        .split(" ")[0];
     },
   },
 
@@ -171,9 +173,7 @@ export default {
 <style scoped>
 .navbar {
   width: 100%;
-
   position: relative;
-
   z-index: 100;
 
   background: #17100d;
@@ -195,9 +195,7 @@ export default {
   margin: 0 auto;
 
   display: flex;
-
   align-items: center;
-
   justify-content: space-between;
 
   gap: 25px;
@@ -205,7 +203,6 @@ export default {
 
 .logo {
   display: flex;
-
   align-items: center;
 
   gap: 10px;
@@ -218,7 +215,6 @@ export default {
   height: 40px;
 
   display: grid;
-
   place-items: center;
 
   border-radius: 12px;
@@ -233,7 +229,6 @@ export default {
   color: white;
 
   font-size: 21px;
-
   font-weight: 900;
 }
 
@@ -265,7 +260,6 @@ export default {
   flex: 1;
 
   display: flex;
-
   justify-content: center;
 
   gap: 30px;
@@ -274,11 +268,14 @@ export default {
 }
 
 .desktop-nav a {
+  position: relative;
+
+  padding: 29px 0;
+
   color: #cfc2be;
 
   font-size: 14px;
-
-  font-weight: 600;
+  font-weight: 700;
 
   transition: 0.2s;
 }
@@ -292,9 +289,25 @@ export default {
   color: #ff7049;
 }
 
+.desktop-nav
+  a.router-link-active::after {
+  content: "";
+
+  position: absolute;
+
+  left: 0;
+  right: 0;
+  bottom: 19px;
+
+  height: 2px;
+
+  border-radius: 10px;
+
+  background: #ff7049;
+}
+
 .navbar-actions {
   display: flex;
-
   align-items: center;
 
   gap: 13px;
@@ -304,7 +317,6 @@ export default {
   color: white;
 
   font-size: 14px;
-
   font-weight: 700;
 }
 
@@ -318,8 +330,16 @@ export default {
   color: white;
 
   font-size: 13px;
-
   font-weight: 800;
+
+  transition: 0.2s;
+}
+
+.register-button:hover {
+  transform:
+    translateY(-1px);
+
+  background: #f05a36;
 }
 
 .user-info {
@@ -355,7 +375,6 @@ export default {
   color: #d4c7c3;
 
   font-size: 12px;
-
   font-weight: 700;
 }
 
@@ -365,7 +384,8 @@ export default {
 
 @media (max-width: 800px) {
   .navbar-container {
-    width: calc(100% - 24px);
+    width:
+      calc(100% - 24px);
 
     min-height: 68px;
   }
@@ -375,7 +395,7 @@ export default {
   }
 
   .logo-text {
-    display: none;
+    display: block;
   }
 
   .user-info {
@@ -384,6 +404,12 @@ export default {
 
   .register-button {
     padding: 10px 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .logo-text {
+    display: none;
   }
 }
 </style>
