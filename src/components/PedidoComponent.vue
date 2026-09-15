@@ -5,7 +5,7 @@
       :mensagem="alerta.mensagem"
     />
 
-    <form id="pedido-form" @submit.prevent="criarPedido">
+    <form id="pedido-form" @submit.prevent="enviarPedido">
       <div class="pizza-preview">
         <img
           id="foto-content"
@@ -15,17 +15,13 @@
         />
 
         <div class="pizza-overlay">
-          <p id="nome-pizza-content">
-            {{
-              pizza && pizza.nome
-                ? pizza.nome
-                : "Monte seu pedido"
-            }}
-          </p>
+          <h1>
+            {{ pizza?.nome || "Monte seu pedido" }}
+          </h1>
 
-          <span class="pizza-info">
-            Escolha o tamanho abaixo
-          </span>
+          <p>
+            Escolha o tamanho e personalize sua pizza
+          </p>
         </div>
       </div>
 
@@ -36,23 +32,25 @@
           <h2>Personalize sua pizza</h2>
 
           <p>
-            O preço da pizza é definido pelo tamanho escolhido.
+            O preço principal é definido pelo tamanho escolhido.
           </p>
         </div>
 
+        <!-- CLIENTE -->
         <div class="inputs">
           <label for="nome-cliente">
-            Nome do Cliente
+            Nome do cliente
           </label>
 
           <input
             id="nome-cliente"
-            v-model="nomeCliente"
+            v-model.trim="nomeCliente"
             type="text"
             placeholder="Digite o nome do cliente"
           />
         </div>
 
+        <!-- TAMANHO -->
         <div class="inputs">
           <label for="tamanho-pizza">
             Tamanho da pizza
@@ -71,7 +69,8 @@
               :key="tamanho.id"
               :value="tamanho"
             >
-              {{ tamanho.descricao }} -
+              {{ tamanho.descricao }}
+              -
               {{ formatarMoeda(tamanho.valor) }}
             </option>
           </select>
@@ -79,10 +78,10 @@
 
         <div
           v-if="tamanhoSelecionado"
-          class="size-price"
+          class="preco-tamanho"
         >
           <div>
-            <small>VALOR DA PIZZA</small>
+            <small>TAMANHO SELECIONADO</small>
 
             <strong>
               {{ tamanhoSelecionado.descricao }}
@@ -90,28 +89,27 @@
           </div>
 
           <span>
-            {{
-              formatarMoeda(
-                tamanhoSelecionado.valor
-              )
-            }}
+            {{ formatarMoeda(tamanhoSelecionado.valor) }}
           </span>
         </div>
 
+        <!-- SABORES -->
         <div class="inputs">
-          <label>Sabores</label>
+          <label>
+            Sabores
+          </label>
 
-          <p class="campo-ajuda">
-            Escolha até 2 sabores. Os sabores não alteram o preço.
+          <p class="ajuda">
+            Escolha de 1 até 2 sabores.
           </p>
 
           <div class="opcoes-grid">
             <label
               v-for="sabor in listaSabores"
               :key="sabor.id"
-              class="checkbox-container"
+              class="opcao"
               :class="{
-                selecionado: saborSelecionado(sabor),
+                selecionado: saborSelecionado(sabor)
               }"
             >
               <input
@@ -137,9 +135,10 @@
           </div>
         </div>
 
+        <!-- BORDA -->
         <div class="inputs">
           <label for="borda-pizza">
-            Escolha a borda
+            Borda
           </label>
 
           <select
@@ -155,23 +154,26 @@
               :key="borda.id"
               :value="borda"
             >
-              {{ borda.nome }} -
+              {{ borda.nome }}
+              -
               + {{ formatarMoeda(borda.valor) }}
             </option>
           </select>
         </div>
 
+        <!-- BEBIDAS -->
         <div class="inputs">
-          <label>Bebidas</label>
+          <label>
+            Bebidas
+          </label>
 
           <div class="opcoes-grid">
             <label
               v-for="bebida in listaBebidas"
               :key="bebida.id"
-              class="checkbox-container"
+              class="opcao"
               :class="{
-                selecionado:
-                  bebidaSelecionada(bebida),
+                selecionado: bebidaSelecionada(bebida)
               }"
             >
               <input
@@ -193,6 +195,7 @@
           </div>
         </div>
 
+        <!-- OBSERVAÇÃO -->
         <div class="inputs">
           <label for="observacao">
             Observação
@@ -201,20 +204,18 @@
           <textarea
             id="observacao"
             v-model="observacao"
-            placeholder="Ex.: sem cebola, cortar em mais pedaços..."
             maxlength="300"
+            placeholder="Ex.: sem cebola, cortar em mais pedaços..."
           ></textarea>
         </div>
 
+        <!-- RESUMO -->
         <div class="resumo">
           <h3>Resumo do pedido</h3>
 
           <div class="resumo-linha">
             <span>Pizza</span>
-
-            <strong>
-              {{ pizza?.nome || "--" }}
-            </strong>
+            <strong>{{ pizza?.nome || "--" }}</strong>
           </div>
 
           <div class="resumo-linha">
@@ -233,14 +234,10 @@
             v-if="tamanhoSelecionado"
             class="resumo-linha"
           >
-            <span>Valor da pizza</span>
+            <span>Valor</span>
 
             <strong>
-              {{
-                formatarMoeda(
-                  tamanhoSelecionado.valor
-                )
-              }}
+              {{ formatarMoeda(tamanhoSelecionado.valor) }}
             </strong>
           </div>
 
@@ -264,31 +261,17 @@
             <strong>
               {{
                 bordaSelecionada
-                  ? bordaSelecionada.nome
+                  ? `${bordaSelecionada.nome} (+ ${formatarMoeda(
+                      bordaSelecionada.valor
+                    )})`
                   : "Sem borda"
               }}
             </strong>
           </div>
 
           <div
-            v-if="bordaSelecionada"
-            class="resumo-linha"
-          >
-            <span>Valor da borda</span>
-
-            <strong>
-              +
-              {{
-                formatarMoeda(
-                  bordaSelecionada.valor
-                )
-              }}
-            </strong>
-          </div>
-
-          <div
             v-for="bebida in listaBebidasSelecionadas"
-            :key="`resumo-bebida-${bebida.id}`"
+            :key="`bebida-${bebida.id}`"
             class="resumo-linha"
           >
             <span>{{ bebida.nome }}</span>
@@ -299,7 +282,7 @@
           </div>
 
           <div class="resumo-total">
-            <span>Total do pedido</span>
+            <span>Total</span>
 
             <strong>
               {{ formatarMoeda(totalPedido) }}
@@ -307,16 +290,27 @@
           </div>
         </div>
 
+        <!-- ERRO PRÓXIMO DO BOTÃO -->
+        <div
+          v-if="erroPedido"
+          class="erro-pedido"
+        >
+          {{ erroPedido }}
+        </div>
+
         <button
           type="submit"
           class="submit-btn"
           :disabled="enviando"
         >
-          {{
-            enviando
-              ? "Enviando pedido..."
-              : `Confirmar Pedido - ${formatarMoeda(totalPedido)}`
-          }}
+          <template v-if="enviando">
+            Enviando pedido...
+          </template>
+
+          <template v-else>
+            Confirmar Pedido -
+            {{ formatarMoeda(totalPedido) }}
+          </template>
         </button>
       </div>
     </form>
@@ -325,7 +319,18 @@
 
 <script>
 import AlertaComponentVue from "@/components/AlertaComponent.vue";
-import { obterUsuarioAtual } from "@/services/auth";
+
+import {
+  obterUsuarioAtual,
+} from "@/services/auth";
+
+import {
+  criarPedido,
+} from "@/services/pedidos";
+
+import {
+  get,
+} from "@/services/api";
 
 export default {
   name: "PedidoComponent",
@@ -351,24 +356,22 @@ export default {
       usuario: null,
 
       nomeCliente: "",
-
       tamanhoSelecionado: "",
-
       bordaSelecionada: "",
 
       listaSaboresSelecionados: [],
-
       listaBebidasSelecionadas: [],
 
       observacao: "",
 
       enviando: false,
 
+      erroPedido: "",
+
       imagemComErro: false,
+      tentouFallback: false,
 
-      tentouFallbackRemoto: false,
-
-      fallbackRemoto:
+      imagemFallback:
         "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=1200&q=85",
 
       alerta: {
@@ -383,21 +386,22 @@ export default {
     fotoAtual() {
       if (
         !this.imagemComErro &&
-        this.pizza &&
-        this.pizza.foto
+        this.pizza?.foto
       ) {
         return this.pizza.foto;
       }
 
-      if (!this.tentouFallbackRemoto) {
-        return this.fallbackRemoto;
+      if (!this.tentouFallback) {
+        return this.imagemFallback;
       }
 
       return `${process.env.BASE_URL}img/logo_tpizza.svg`;
     },
 
     totalPedido() {
-      let total = Number(
+      let total = 0;
+
+      total += Number(
         this.tamanhoSelecionado?.valor || 0
       );
 
@@ -405,16 +409,11 @@ export default {
         this.bordaSelecionada?.valor || 0
       );
 
-      total +=
-        this.listaBebidasSelecionadas.reduce(
-          (soma, bebida) => {
-            return (
-              soma +
-              Number(bebida.valor || 0)
-            );
-          },
-          0
-        );
+      total += this.listaBebidasSelecionadas.reduce(
+        (soma, bebida) =>
+          soma + Number(bebida.valor || 0),
+        0
+      );
 
       return total;
     },
@@ -426,7 +425,7 @@ export default {
 
       handler() {
         this.imagemComErro = false;
-        this.tentouFallbackRemoto = false;
+        this.tentouFallback = false;
       },
     },
   },
@@ -434,15 +433,21 @@ export default {
   async mounted() {
     this.usuario = obterUsuarioAtual();
 
-    if (this.usuario) {
-      this.nomeCliente =
-        this.usuario.nome || "";
+    if (!this.usuario) {
+      await this.$router.push({
+        name: "login",
+        query: {
+          redirect: this.$route.fullPath,
+        },
+      });
+
+      return;
     }
 
-    await Promise.all([
-      this.getTamanhos(),
-      this.getOpcionais(),
-    ]);
+    this.nomeCliente =
+      this.usuario.nome || "";
+
+    await this.carregarDados();
   },
 
   methods: {
@@ -458,13 +463,13 @@ export default {
         this.imagemComErro = true;
 
         event.target.src =
-          this.fallbackRemoto;
+          this.imagemFallback;
 
         return;
       }
 
-      if (!this.tentouFallbackRemoto) {
-        this.tentouFallbackRemoto = true;
+      if (!this.tentouFallback) {
+        this.tentouFallback = true;
 
         event.target.src =
           `${process.env.BASE_URL}img/logo_tpizza.svg`;
@@ -475,51 +480,37 @@ export default {
       event.target.onerror = null;
     },
 
-    async getTamanhos() {
+    async carregarDados() {
       try {
-        const response = await fetch(
-          `${this.$apiUrl}/tamanhos`
-        );
-
-        if (!response.ok) {
-          throw new Error();
-        }
+        const [tamanhos, opcionais] =
+          await Promise.all([
+            get("/tamanhos"),
+            get("/opcionais"),
+          ]);
 
         this.listaTamanhos =
-          await response.json();
-      } catch (error) {
-        this.exibirAlerta(
-          "erro",
-          "Não foi possível carregar os tamanhos."
-        );
-      }
-    },
-
-    async getOpcionais() {
-      try {
-        const response = await fetch(
-          `${this.$apiUrl}/opcionais`
-        );
-
-        if (!response.ok) {
-          throw new Error();
-        }
-
-        const dados =
-          await response.json();
+          tamanhos || [];
 
         this.listaSabores =
-          dados.sabores || [];
+          opcionais?.sabores || [];
 
         this.listaBordas =
-          dados.bordas || [];
+          opcionais?.bordas || [];
 
         this.listaBebidas =
-          dados.bebidas || [];
+          opcionais?.bebidas || [];
       } catch (error) {
+        console.error(
+          "Erro ao carregar dados do pedido:",
+          error
+        );
+
+        this.erroPedido =
+          "Não foi possível carregar os dados do pedido.";
+
         this.exibirAlerta(
           "erro",
-          "Não foi possível carregar sabores, bordas e bebidas."
+          this.erroPedido
         );
       }
     },
@@ -541,38 +532,32 @@ export default {
     },
 
     validarPedido() {
-      if (!this.pizza || !this.pizza.id) {
-        this.exibirAlerta(
-          "erro",
-          "Selecione uma pizza no cardápio antes de confirmar o pedido."
-        );
+      this.erroPedido = "";
+
+      if (!this.usuario) {
+        this.erroPedido =
+          "Você precisa estar logado para fazer o pedido.";
 
         return false;
       }
 
-      if (!this.usuario) {
-        this.exibirAlerta(
-          "erro",
-          "Você precisa estar logado para fazer um pedido."
-        );
+      if (!this.pizza?.id) {
+        this.erroPedido =
+          "Selecione uma pizza no cardápio.";
 
         return false;
       }
 
       if (!this.nomeCliente.trim()) {
-        this.exibirAlerta(
-          "erro",
-          "Informe o nome do cliente."
-        );
+        this.erroPedido =
+          "Informe o nome do cliente.";
 
         return false;
       }
 
       if (!this.tamanhoSelecionado) {
-        this.exibirAlerta(
-          "erro",
-          "Escolha o tamanho da pizza."
-        );
+        this.erroPedido =
+          "Escolha o tamanho da pizza.";
 
         return false;
       }
@@ -580,10 +565,8 @@ export default {
       if (
         this.listaSaboresSelecionados.length === 0
       ) {
-        this.exibirAlerta(
-          "erro",
-          "Escolha pelo menos um sabor."
-        );
+        this.erroPedido =
+          "Escolha pelo menos um sabor.";
 
         return false;
       }
@@ -591,10 +574,15 @@ export default {
       if (
         this.listaSaboresSelecionados.length > 2
       ) {
-        this.exibirAlerta(
-          "aviso",
-          "A pizza permite no máximo 2 sabores."
-        );
+        this.erroPedido =
+          "Escolha no máximo dois sabores.";
+
+        return false;
+      }
+
+      if (this.totalPedido <= 0) {
+        this.erroPedido =
+          "O valor do pedido está inválido. Escolha novamente o tamanho.";
 
         return false;
       }
@@ -602,8 +590,15 @@ export default {
       return true;
     },
 
-    async criarPedido() {
+    async enviarPedido() {
+      this.erroPedido = "";
+
       if (!this.validarPedido()) {
+        this.exibirAlerta(
+          "erro",
+          this.erroPedido
+        );
+
         return;
       }
 
@@ -612,14 +607,15 @@ export default {
       const agora =
         new Date().toISOString();
 
-      const dadosPedido = {
+      const pedido = {
         usuarioId: this.usuario.id,
 
         nome:
           this.nomeCliente.trim(),
 
         tamanho: {
-          id: this.tamanhoSelecionado.id,
+          id:
+            this.tamanhoSelecionado.id,
 
           descricao:
             this.tamanhoSelecionado.descricao,
@@ -629,16 +625,32 @@ export default {
           ),
         },
 
-        sabores: Array.from(
-          this.listaSaboresSelecionados
-        ),
+        sabores:
+          this.listaSaboresSelecionados.map(
+            (sabor) => ({
+              ...sabor,
+            })
+          ),
 
         borda:
-          this.bordaSelecionada || null,
+          this.bordaSelecionada
+            ? {
+                ...this.bordaSelecionada,
+                valor: Number(
+                  this.bordaSelecionada.valor || 0
+                ),
+              }
+            : null,
 
-        bebidas: Array.from(
-          this.listaBebidasSelecionadas
-        ),
+        bebidas:
+          this.listaBebidasSelecionadas.map(
+            (bebida) => ({
+              ...bebida,
+              valor: Number(
+                bebida.valor || 0
+              ),
+            })
+          ),
 
         pizza: {
           ...this.pizza,
@@ -647,8 +659,9 @@ export default {
 
         statusId: 5,
 
-        total:
-          Number(this.totalPedido),
+        total: Number(
+          this.totalPedido
+        ),
 
         observacao:
           this.observacao.trim(),
@@ -659,25 +672,13 @@ export default {
       };
 
       try {
-        const response = await fetch(
-          `${this.$apiUrl}/pedidos`,
-          {
-            method: "POST",
+        const pedidoCriado =
+          await criarPedido(pedido);
 
-            headers: {
-              "Content-Type":
-                "application/json",
-            },
-
-            body: JSON.stringify(
-              dadosPedido
-            ),
-          }
+        console.log(
+          "Pedido criado:",
+          pedidoCriado
         );
-
-        if (!response.ok) {
-          throw new Error();
-        }
 
         this.exibirAlerta(
           "sucesso",
@@ -690,11 +691,20 @@ export default {
           this.$router.push(
             "/meus-pedidos"
           );
-        }, 1000);
+        }, 800);
       } catch (error) {
+        console.error(
+          "Erro ao criar pedido:",
+          error
+        );
+
+        this.erroPedido =
+          error?.message ||
+          "Não foi possível realizar o pedido.";
+
         this.exibirAlerta(
           "erro",
-          "Não foi possível cadastrar o pedido. Tente novamente."
+          this.erroPedido
         );
       } finally {
         this.enviando = false;
@@ -704,10 +714,13 @@ export default {
     formatarMoeda(valor) {
       return Number(
         valor || 0
-      ).toLocaleString("pt-BR", {
-        style: "currency",
-        currency: "BRL",
-      });
+      ).toLocaleString(
+        "pt-BR",
+        {
+          style: "currency",
+          currency: "BRL",
+        }
+      );
     },
   },
 };
@@ -726,91 +739,60 @@ export default {
 
 .pizza-preview {
   position: relative;
-
-  width: 100%;
   height: 320px;
-
-  margin: 0 auto 25px;
-
   overflow: hidden;
-
+  margin-bottom: 25px;
   border-radius: 20px;
-
   background: #211511;
-
   box-shadow:
     0 18px 50px
     rgba(44, 22, 15, 0.18);
 }
 
 #foto-content {
-  display: block;
-
   width: 100%;
   height: 100%;
-
+  display: block;
   object-fit: cover;
-
-  background: #211511;
 }
 
 .pizza-preview::after {
   content: "";
-
   position: absolute;
-
   inset: 0;
-
-  pointer-events: none;
-
   background:
     linear-gradient(
-      180deg,
       transparent 25%,
-      rgba(0, 0, 0, 0.82) 100%
+      rgba(0, 0, 0, 0.85)
     );
 }
 
 .pizza-overlay {
   position: absolute;
-
+  z-index: 2;
   left: 30px;
   right: 30px;
   bottom: 27px;
-
-  z-index: 2;
 }
 
-#nome-pizza-content {
+.pizza-overlay h1 {
   margin: 0 0 5px;
-
   color: white;
-
   font-size: 38px;
-  font-weight: 900;
-
-  line-height: 1.1;
 }
 
-.pizza-info {
-  color: #f5ded6;
-
-  font-size: 14px;
+.pizza-overlay p {
+  margin: 0;
+  color: #f0dcd5;
 }
 
 .form-card {
   width: min(760px, 100%);
-
-  margin: 0 auto;
-
+  margin: auto;
   padding: 32px;
-
   border: 1px solid #eadfd9;
-
   border-radius: 20px;
-
   background: white;
-
   box-shadow:
     0 12px 40px
     rgba(45, 26, 20, 0.07);
@@ -822,42 +804,31 @@ export default {
 
 .form-header > span {
   color: #dc4b29;
-
   font-size: 11px;
   font-weight: 900;
-
   letter-spacing: 2px;
 }
 
 .form-header h2 {
-  margin: 6px 0 7px;
-
+  margin: 6px 0;
   color: #281914;
-
   font-size: 28px;
 }
 
 .form-header p {
   margin: 0;
-
   color: #83736d;
-
-  line-height: 1.5;
 }
 
 .inputs {
   display: flex;
-
   flex-direction: column;
-
   margin-bottom: 25px;
 }
 
 .inputs > label {
   margin-bottom: 9px;
-
   color: #3f2e28;
-
   font-size: 13px;
   font-weight: 900;
 }
@@ -866,36 +837,23 @@ input,
 select,
 textarea {
   width: 100%;
-
-  box-sizing: border-box;
-
   border: 1px solid #ded2cd;
-
   border-radius: 11px;
-
   outline: none;
-
   background: white;
-
   color: #392721;
-
   font-size: 14px;
-
-  transition: 0.2s;
 }
 
 input,
 select {
   min-height: 48px;
-
   padding: 0 13px;
 }
 
 textarea {
   min-height: 105px;
-
   padding: 13px;
-
   resize: vertical;
 }
 
@@ -903,243 +861,161 @@ input:focus,
 select:focus,
 textarea:focus {
   border-color: #df4b29;
-
   box-shadow:
     0 0 0 3px
     rgba(223, 75, 41, 0.1);
 }
 
-.size-price {
+.preco-tamanho {
   margin: -10px 0 25px;
-
   padding: 16px 18px;
-
   display: flex;
-
-  align-items: center;
   justify-content: space-between;
-
-  gap: 15px;
-
+  align-items: center;
   border: 1px solid #f1c9bc;
-
   border-radius: 13px;
-
   background: #fff5f1;
 }
 
-.size-price small {
+.preco-tamanho small {
   display: block;
-
-  margin-bottom: 4px;
-
   color: #ae7665;
-
   font-size: 9px;
   font-weight: 900;
-
-  letter-spacing: 1.3px;
 }
 
-.size-price strong {
+.preco-tamanho strong {
   color: #463029;
-
-  font-size: 13px;
 }
 
-.size-price > span {
+.preco-tamanho > span {
   color: #d74724;
-
   font-size: 22px;
   font-weight: 900;
 }
 
-.campo-ajuda {
+.ajuda {
   margin: -3px 0 12px;
-
   color: #8c7b75;
-
   font-size: 12px;
 }
 
 .opcoes-grid {
   display: grid;
-
   grid-template-columns:
-    repeat(
-      auto-fit,
-      minmax(220px, 1fr)
-    );
-
+    repeat(auto-fit, minmax(220px, 1fr));
   gap: 10px;
 }
 
-.checkbox-container {
+.opcao {
   min-height: 65px;
-
   display: flex;
-
   align-items: center;
-
   gap: 10px;
-
   padding: 12px;
-
   border: 1px solid #e9dfdb;
-
   border-radius: 12px;
-
   background: #fbf9f8;
-
   cursor: pointer;
-
-  transition: 0.2s;
 }
 
-.checkbox-container:hover {
-  border-color: #efb5a5;
-}
-
-.checkbox-container.selecionado {
+.opcao.selecionado {
   border-color: #e35331;
-
   background: #fff3ef;
 }
 
-.checkbox-container input {
+.opcao input {
   width: 17px;
   height: 17px;
-
   min-height: auto;
-
-  flex-shrink: 0;
 }
 
-.checkbox-container div {
-  min-width: 0;
-}
-
-.checkbox-container strong {
+.opcao strong,
+.opcao small {
   display: block;
+}
 
+.opcao strong {
   margin-bottom: 3px;
-
   color: #3c2a24;
-
-  font-size: 13px;
 }
 
-.checkbox-container small {
-  display: block;
-
+.opcao small {
   color: #8a7872;
-
   font-size: 11px;
-
-  line-height: 1.35;
 }
 
 .resumo {
-  margin-top: 10px;
-  margin-bottom: 22px;
-
+  margin: 10px 0 22px;
   padding: 20px;
-
   border-radius: 15px;
-
   background: #faf6f4;
 }
 
 .resumo h3 {
   margin: 0 0 15px;
-
-  color: #33231d;
-
-  font-size: 17px;
 }
 
 .resumo-linha {
   padding: 8px 0;
-
   display: flex;
-
   justify-content: space-between;
-
   gap: 20px;
-
   border-bottom: 1px solid #eee3df;
 }
 
 .resumo-linha span {
   color: #887670;
-
-  font-size: 13px;
 }
 
 .resumo-linha strong {
-  color: #44312a;
-
-  font-size: 13px;
-
   text-align: right;
+  color: #44312a;
 }
 
 .resumo-total {
   margin-top: 12px;
-
   padding-top: 14px;
-
   display: flex;
-
   justify-content: space-between;
-
   align-items: center;
-
-  gap: 20px;
 }
 
 .resumo-total span {
-  color: #4a352e;
-
-  font-size: 14px;
   font-weight: 900;
 }
 
 .resumo-total strong {
   color: #d94725;
-
   font-size: 25px;
+}
+
+.erro-pedido {
+  margin-bottom: 14px;
+  padding: 13px;
+  border: 1px solid #f2b8ae;
+  border-radius: 10px;
+  background: #fff0ed;
+  color: #aa3926;
+  font-size: 13px;
+  font-weight: 700;
 }
 
 .submit-btn {
   width: 100%;
-
   min-height: 56px;
-
-  border: 0;
-
+  border: none;
   border-radius: 13px;
-
   background:
     linear-gradient(
       135deg,
       #f15b34,
       #c8351b
     );
-
   color: white;
-
   font-size: 15px;
-
   font-weight: 900;
-
   cursor: pointer;
-
-  box-shadow:
-    0 10px 25px
-    rgba(199, 51, 27, 0.2);
-
-  transition: 0.2s;
 }
 
 .submit-btn:hover:not(:disabled) {
@@ -1148,21 +1024,16 @@ textarea:focus {
 
 .submit-btn:disabled {
   opacity: 0.6;
-
   cursor: wait;
 }
 
 @media (max-width: 650px) {
   .pedido-page {
     width: calc(100% - 22px);
-
-    margin-top: 20px;
   }
 
   .pizza-preview {
     height: 240px;
-
-    border-radius: 15px;
   }
 
   .pizza-overlay {
@@ -1171,8 +1042,8 @@ textarea:focus {
     bottom: 18px;
   }
 
-  #nome-pizza-content {
-    font-size: 28px;
+  .pizza-overlay h1 {
+    font-size: 27px;
   }
 
   .form-card {
@@ -1181,18 +1052,6 @@ textarea:focus {
 
   .opcoes-grid {
     grid-template-columns: 1fr;
-  }
-
-  .resumo-linha {
-    align-items: flex-start;
-
-    flex-direction: column;
-
-    gap: 4px;
-  }
-
-  .resumo-linha strong {
-    text-align: left;
   }
 }
 </style>
