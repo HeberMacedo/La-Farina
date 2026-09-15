@@ -1,714 +1,531 @@
 <template>
-  <div class="pedido-page">
-    <alerta-component-vue
-      :tipo="alerta.tipo"
-      :mensagem="alerta.mensagem"
-    />
+  <div class="page">
+    <div class="container">
+      <!-- CABEÇALHO -->
+      <div class="header">
+        <div>
+          <span class="eyebrow">
+            MINHA CONTA
+          </span>
 
-    <form id="pedido-form" @submit.prevent="enviarPedido">
-      <div class="pizza-preview">
-        <img
-          id="foto-content"
-          :src="fotoAtual"
-          :alt="pizza?.nome || 'Pizza La Farina'"
-          @error="tratarErroImagem"
-        />
-
-        <div class="pizza-overlay">
           <h1>
-            {{ pizza?.nome || "Monte seu pedido" }}
+            Meus pedidos
           </h1>
 
           <p>
-            Escolha o tamanho e personalize sua pizza
+            Acompanhe todos os pedidos que você realizou na La Farina.
           </p>
         </div>
+
+        <router-link
+          to="/menu"
+          class="new-order"
+        >
+          Fazer novo pedido
+        </router-link>
       </div>
 
-      <div class="form-card">
-        <div class="form-header">
-          <span>SEU PEDIDO</span>
+      <!-- CARREGANDO -->
+      <div
+        v-if="carregando"
+        class="state-card"
+      >
+        <div class="spinner"></div>
 
-          <h2>Personalize sua pizza</h2>
+        <p>
+          Carregando seus pedidos...
+        </p>
+      </div>
 
-          <p>
-            O preço principal é definido pelo tamanho escolhido.
-          </p>
+      <!-- ERRO -->
+      <div
+        v-else-if="erro"
+        class="state-card error"
+      >
+        <div class="state-icon">
+          !
         </div>
 
-        <!-- CLIENTE -->
-        <div class="inputs">
-          <label for="nome-cliente">
-            Nome do cliente
-          </label>
+        <h2>
+          Não foi possível carregar seus pedidos
+        </h2>
 
-          <input
-            id="nome-cliente"
-            v-model.trim="nomeCliente"
-            type="text"
-            placeholder="Digite o nome do cliente"
-          />
-        </div>
-
-        <!-- TAMANHO -->
-        <div class="inputs">
-          <label for="tamanho-pizza">
-            Tamanho da pizza
-          </label>
-
-          <select
-            id="tamanho-pizza"
-            v-model="tamanhoSelecionado"
-          >
-            <option value="">
-              Selecione o tamanho
-            </option>
-
-            <option
-              v-for="tamanho in listaTamanhos"
-              :key="tamanho.id"
-              :value="tamanho"
-            >
-              {{ tamanho.descricao }}
-              -
-              {{ formatarMoeda(tamanho.valor) }}
-            </option>
-          </select>
-        </div>
-
-        <div
-          v-if="tamanhoSelecionado"
-          class="preco-tamanho"
-        >
-          <div>
-            <small>TAMANHO SELECIONADO</small>
-
-            <strong>
-              {{ tamanhoSelecionado.descricao }}
-            </strong>
-          </div>
-
-          <span>
-            {{ formatarMoeda(tamanhoSelecionado.valor) }}
-          </span>
-        </div>
-
-        <!-- SABORES -->
-        <div class="inputs">
-          <label>
-            Sabores
-          </label>
-
-          <p class="ajuda">
-            Escolha de 1 até 2 sabores.
-          </p>
-
-          <div class="opcoes-grid">
-            <label
-              v-for="sabor in listaSabores"
-              :key="sabor.id"
-              class="opcao"
-              :class="{
-                selecionado: saborSelecionado(sabor)
-              }"
-            >
-              <input
-                v-model="listaSaboresSelecionados"
-                type="checkbox"
-                :value="sabor"
-                :disabled="
-                  !saborSelecionado(sabor) &&
-                  listaSaboresSelecionados.length >= 2
-                "
-              />
-
-              <div>
-                <strong>
-                  {{ sabor.nome }}
-                </strong>
-
-                <small>
-                  {{ sabor.descricao }}
-                </small>
-              </div>
-            </label>
-          </div>
-        </div>
-
-        <!-- BORDA -->
-        <div class="inputs">
-          <label for="borda-pizza">
-            Borda
-          </label>
-
-          <select
-            id="borda-pizza"
-            v-model="bordaSelecionada"
-          >
-            <option value="">
-              Sem borda recheada
-            </option>
-
-            <option
-              v-for="borda in listaBordas"
-              :key="borda.id"
-              :value="borda"
-            >
-              {{ borda.nome }}
-              -
-              + {{ formatarMoeda(borda.valor) }}
-            </option>
-          </select>
-        </div>
-
-        <!-- BEBIDAS -->
-        <div class="inputs">
-          <label>
-            Bebidas
-          </label>
-
-          <div class="opcoes-grid">
-            <label
-              v-for="bebida in listaBebidas"
-              :key="bebida.id"
-              class="opcao"
-              :class="{
-                selecionado: bebidaSelecionada(bebida)
-              }"
-            >
-              <input
-                v-model="listaBebidasSelecionadas"
-                type="checkbox"
-                :value="bebida"
-              />
-
-              <div>
-                <strong>
-                  {{ bebida.nome }}
-                </strong>
-
-                <small>
-                  + {{ formatarMoeda(bebida.valor) }}
-                </small>
-              </div>
-            </label>
-          </div>
-        </div>
-
-        <!-- OBSERVAÇÃO -->
-        <div class="inputs">
-          <label for="observacao">
-            Observação
-          </label>
-
-          <textarea
-            id="observacao"
-            v-model="observacao"
-            maxlength="300"
-            placeholder="Ex.: sem cebola, cortar em mais pedaços..."
-          ></textarea>
-        </div>
-
-        <!-- RESUMO -->
-        <div class="resumo">
-          <h3>Resumo do pedido</h3>
-
-          <div class="resumo-linha">
-            <span>Pizza</span>
-            <strong>{{ pizza?.nome || "--" }}</strong>
-          </div>
-
-          <div class="resumo-linha">
-            <span>Tamanho</span>
-
-            <strong>
-              {{
-                tamanhoSelecionado
-                  ? tamanhoSelecionado.descricao
-                  : "Não selecionado"
-              }}
-            </strong>
-          </div>
-
-          <div
-            v-if="tamanhoSelecionado"
-            class="resumo-linha"
-          >
-            <span>Valor</span>
-
-            <strong>
-              {{ formatarMoeda(tamanhoSelecionado.valor) }}
-            </strong>
-          </div>
-
-          <div class="resumo-linha">
-            <span>Sabores</span>
-
-            <strong>
-              {{
-                listaSaboresSelecionados.length
-                  ? listaSaboresSelecionados
-                      .map((item) => item.nome)
-                      .join(", ")
-                  : "Nenhum"
-              }}
-            </strong>
-          </div>
-
-          <div class="resumo-linha">
-            <span>Borda</span>
-
-            <strong>
-              {{
-                bordaSelecionada
-                  ? `${bordaSelecionada.nome} (+ ${formatarMoeda(
-                      bordaSelecionada.valor
-                    )})`
-                  : "Sem borda"
-              }}
-            </strong>
-          </div>
-
-          <div
-            v-for="bebida in listaBebidasSelecionadas"
-            :key="`bebida-${bebida.id}`"
-            class="resumo-linha"
-          >
-            <span>{{ bebida.nome }}</span>
-
-            <strong>
-              + {{ formatarMoeda(bebida.valor) }}
-            </strong>
-          </div>
-
-          <div class="resumo-total">
-            <span>Total</span>
-
-            <strong>
-              {{ formatarMoeda(totalPedido) }}
-            </strong>
-          </div>
-        </div>
-
-        <!-- ERRO PRÓXIMO DO BOTÃO -->
-        <div
-          v-if="erroPedido"
-          class="erro-pedido"
-        >
-          {{ erroPedido }}
-        </div>
+        <p>
+          {{ erro }}
+        </p>
 
         <button
-          type="submit"
-          class="submit-btn"
-          :disabled="enviando"
+          type="button"
+          @click="carregar"
         >
-          <template v-if="enviando">
-            Enviando pedido...
-          </template>
-
-          <template v-else>
-            Confirmar Pedido -
-            {{ formatarMoeda(totalPedido) }}
-          </template>
+          Tentar novamente
         </button>
       </div>
-    </form>
+
+      <!-- SEM PEDIDOS -->
+      <div
+        v-else-if="pedidos.length === 0"
+        class="empty"
+      >
+        <div class="empty-icon">
+          🍕
+        </div>
+
+        <h2>
+          Você ainda não fez nenhum pedido
+        </h2>
+
+        <p>
+          Escolha sua pizza favorita e faça seu primeiro pedido na La Farina.
+        </p>
+
+        <router-link to="/menu">
+          Ver cardápio
+        </router-link>
+      </div>
+
+      <!-- LISTA DE PEDIDOS -->
+      <div
+        v-else
+        class="orders"
+      >
+        <article
+          v-for="pedido in pedidosOrdenados"
+          :key="pedido.id"
+          class="order-card"
+        >
+          <!-- TOPO DO PEDIDO -->
+          <div class="order-top">
+            <div class="order-number">
+              <small>
+                PEDIDO
+              </small>
+
+              <h2>
+                #{{ pedido.id }}
+              </h2>
+            </div>
+
+            <span
+              class="status"
+              :class="statusClass(pedido.statusId)"
+            >
+              {{ descricaoStatus(pedido.statusId) }}
+            </span>
+          </div>
+
+          <!-- CONTEÚDO -->
+          <div class="order-content">
+            <!-- PIZZA -->
+            <div
+              v-if="pedido.pizza"
+              class="pizza"
+            >
+              <img
+                v-if="pedido.pizza.foto"
+                :src="pedido.pizza.foto"
+                :alt="pedido.pizza.nome"
+                @error="imagemErro"
+              />
+
+              <div class="pizza-info">
+                <small>
+                  PIZZA
+                </small>
+
+                <h3>
+                  {{ pedido.pizza.nome }}
+                </h3>
+
+                <p v-if="pedido.tamanho">
+                  {{ pedido.tamanho.descricao }}
+                </p>
+              </div>
+            </div>
+
+            <!-- DETALHES -->
+            <div class="details">
+              <!-- TAMANHO -->
+              <div
+                v-if="pedido.tamanho"
+                class="detail"
+              >
+                <div>
+                  <strong>
+                    Tamanho
+                  </strong>
+
+                  <span>
+                    {{ pedido.tamanho.descricao }}
+                  </span>
+                </div>
+
+                <span
+                  v-if="pedido.tamanho.valor"
+                  class="detail-value"
+                >
+                  {{ formatarMoeda(pedido.tamanho.valor) }}
+                </span>
+              </div>
+
+              <!-- SABORES -->
+              <div
+                v-if="
+                  pedido.sabores &&
+                  pedido.sabores.length
+                "
+                class="detail"
+              >
+                <div>
+                  <strong>
+                    Sabores
+                  </strong>
+
+                  <span>
+                    {{
+                      pedido.sabores
+                        .map((sabor) => sabor.nome)
+                        .join(", ")
+                    }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- BORDA -->
+              <div class="detail">
+                <div>
+                  <strong>
+                    Borda
+                  </strong>
+
+                  <span>
+                    {{
+                      pedido.borda
+                        ? pedido.borda.nome
+                        : "Sem borda recheada"
+                    }}
+                  </span>
+                </div>
+
+                <span
+                  v-if="pedido.borda?.valor"
+                  class="detail-value"
+                >
+                  + {{ formatarMoeda(pedido.borda.valor) }}
+                </span>
+              </div>
+
+              <!-- BEBIDAS -->
+              <div
+                v-if="
+                  pedido.bebidas &&
+                  pedido.bebidas.length
+                "
+                class="detail"
+              >
+                <div>
+                  <strong>
+                    Bebidas
+                  </strong>
+
+                  <span>
+                    {{
+                      pedido.bebidas
+                        .map((bebida) => bebida.nome)
+                        .join(", ")
+                    }}
+                  </span>
+                </div>
+
+                <span class="detail-value">
+                  + {{ formatarMoeda(totalBebidas(pedido)) }}
+                </span>
+              </div>
+
+              <!-- SEM BEBIDAS -->
+              <div
+                v-else
+                class="detail"
+              >
+                <div>
+                  <strong>
+                    Bebidas
+                  </strong>
+
+                  <span>
+                    Nenhuma bebida
+                  </span>
+                </div>
+              </div>
+
+              <!-- OBSERVAÇÃO -->
+              <div
+                v-if="pedido.observacao"
+                class="detail observation"
+              >
+                <div>
+                  <strong>
+                    Observação
+                  </strong>
+
+                  <span>
+                    {{ pedido.observacao }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- STATUS -->
+          <div class="status-area">
+            <div class="status-title">
+              <span>
+                Status do pedido
+              </span>
+
+              <strong>
+                {{ descricaoStatus(pedido.statusId) }}
+              </strong>
+            </div>
+
+            <div class="status-track">
+              <div
+                class="status-progress"
+                :style="{
+                  width: progressoStatus(pedido.statusId)
+                }"
+              ></div>
+            </div>
+
+            <div class="status-labels">
+              <span>
+                Recebido
+              </span>
+
+              <span>
+                Preparo
+              </span>
+
+              <span>
+                Entrega
+              </span>
+
+              <span>
+                Finalizado
+              </span>
+            </div>
+          </div>
+
+          <!-- RODAPÉ -->
+          <div class="order-footer">
+            <div class="order-date">
+              <small>
+                REALIZADO EM
+              </small>
+
+              <strong>
+                {{ formatarData(pedido.dataPedido) }}
+              </strong>
+            </div>
+
+            <div class="total">
+              <small>
+                TOTAL DO PEDIDO
+              </small>
+
+              <strong>
+                {{ formatarMoeda(totalPedido(pedido)) }}
+              </strong>
+            </div>
+          </div>
+        </article>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
-import AlertaComponentVue from "@/components/AlertaComponent.vue";
+import {
+  listarPedidosDoUsuario,
+  listarStatusPedido,
+} from "@/services/pedidos";
 
 import {
   obterUsuarioAtual,
 } from "@/services/auth";
 
-import {
-  criarPedido,
-} from "@/services/pedidos";
-
-import {
-  get,
-} from "@/services/api";
-
 export default {
-  name: "PedidoComponent",
-
-  components: {
-    AlertaComponentVue,
-  },
-
-  props: {
-    pizza: {
-      type: Object,
-      default: null,
-    },
-  },
+  name: "MeusPedidosView",
 
   data() {
     return {
-      listaTamanhos: [],
-      listaSabores: [],
-      listaBordas: [],
-      listaBebidas: [],
-
       usuario: null,
 
-      nomeCliente: "",
-      tamanhoSelecionado: "",
-      bordaSelecionada: "",
+      pedidos: [],
 
-      listaSaboresSelecionados: [],
-      listaBebidasSelecionadas: [],
+      status: [],
 
-      observacao: "",
+      carregando: true,
 
-      enviando: false,
-
-      erroPedido: "",
-
-      imagemComErro: false,
-      tentouFallback: false,
-
-      imagemFallback:
-        "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=1200&q=85",
-
-      alerta: {
-        tipo: "info",
-        mensagem:
-          "Escolha o tamanho e personalize sua pizza.",
-      },
+      erro: "",
     };
   },
 
   computed: {
-    fotoAtual() {
-      if (
-        !this.imagemComErro &&
-        this.pizza?.foto
-      ) {
-        return this.pizza.foto;
-      }
+    pedidosOrdenados() {
+      return [...this.pedidos].sort((a, b) => {
+        if (a.dataPedido && b.dataPedido) {
+          return (
+            new Date(b.dataPedido).getTime() -
+            new Date(a.dataPedido).getTime()
+          );
+        }
 
-      if (!this.tentouFallback) {
-        return this.imagemFallback;
-      }
-
-      return `${process.env.BASE_URL}img/logo_tpizza.svg`;
-    },
-
-    totalPedido() {
-      let total = 0;
-
-      total += Number(
-        this.tamanhoSelecionado?.valor || 0
-      );
-
-      total += Number(
-        this.bordaSelecionada?.valor || 0
-      );
-
-      total += this.listaBebidasSelecionadas.reduce(
-        (soma, bebida) =>
-          soma + Number(bebida.valor || 0),
-        0
-      );
-
-      return total;
-    },
-  },
-
-  watch: {
-    pizza: {
-      immediate: true,
-
-      handler() {
-        this.imagemComErro = false;
-        this.tentouFallback = false;
-      },
+        return Number(b.id) - Number(a.id);
+      });
     },
   },
 
   async mounted() {
-    this.usuario = obterUsuarioAtual();
+    this.usuario =
+      obterUsuarioAtual();
 
     if (!this.usuario) {
-      await this.$router.push({
-        name: "login",
-        query: {
-          redirect: this.$route.fullPath,
-        },
-      });
+      await this.$router.push(
+        "/login"
+      );
 
       return;
     }
 
-    this.nomeCliente =
-      this.usuario.nome || "";
-
-    await this.carregarDados();
+    await this.carregar();
   },
 
   methods: {
-    exibirAlerta(tipo, mensagem) {
-      this.alerta = {
-        tipo,
-        mensagem,
-      };
-    },
+    async carregar() {
+      this.erro = "";
 
-    tratarErroImagem(event) {
-      if (!this.imagemComErro) {
-        this.imagemComErro = true;
-
-        event.target.src =
-          this.imagemFallback;
-
-        return;
-      }
-
-      if (!this.tentouFallback) {
-        this.tentouFallback = true;
-
-        event.target.src =
-          `${process.env.BASE_URL}img/logo_tpizza.svg`;
-
-        return;
-      }
-
-      event.target.onerror = null;
-    },
-
-    async carregarDados() {
-      try {
-        const [tamanhos, opcionais] =
-          await Promise.all([
-            get("/tamanhos"),
-            get("/opcionais"),
-          ]);
-
-        this.listaTamanhos =
-          tamanhos || [];
-
-        this.listaSabores =
-          opcionais?.sabores || [];
-
-        this.listaBordas =
-          opcionais?.bordas || [];
-
-        this.listaBebidas =
-          opcionais?.bebidas || [];
-      } catch (error) {
-        console.error(
-          "Erro ao carregar dados do pedido:",
-          error
-        );
-
-        this.erroPedido =
-          "Não foi possível carregar os dados do pedido.";
-
-        this.exibirAlerta(
-          "erro",
-          this.erroPedido
-        );
-      }
-    },
-
-    saborSelecionado(sabor) {
-      return this.listaSaboresSelecionados.some(
-        (item) =>
-          Number(item.id) ===
-          Number(sabor.id)
-      );
-    },
-
-    bebidaSelecionada(bebida) {
-      return this.listaBebidasSelecionadas.some(
-        (item) =>
-          Number(item.id) ===
-          Number(bebida.id)
-      );
-    },
-
-    validarPedido() {
-      this.erroPedido = "";
-
-      if (!this.usuario) {
-        this.erroPedido =
-          "Você precisa estar logado para fazer o pedido.";
-
-        return false;
-      }
-
-      if (!this.pizza?.id) {
-        this.erroPedido =
-          "Selecione uma pizza no cardápio.";
-
-        return false;
-      }
-
-      if (!this.nomeCliente.trim()) {
-        this.erroPedido =
-          "Informe o nome do cliente.";
-
-        return false;
-      }
-
-      if (!this.tamanhoSelecionado) {
-        this.erroPedido =
-          "Escolha o tamanho da pizza.";
-
-        return false;
-      }
-
-      if (
-        this.listaSaboresSelecionados.length === 0
-      ) {
-        this.erroPedido =
-          "Escolha pelo menos um sabor.";
-
-        return false;
-      }
-
-      if (
-        this.listaSaboresSelecionados.length > 2
-      ) {
-        this.erroPedido =
-          "Escolha no máximo dois sabores.";
-
-        return false;
-      }
-
-      if (this.totalPedido <= 0) {
-        this.erroPedido =
-          "O valor do pedido está inválido. Escolha novamente o tamanho.";
-
-        return false;
-      }
-
-      return true;
-    },
-
-    async enviarPedido() {
-      this.erroPedido = "";
-
-      if (!this.validarPedido()) {
-        this.exibirAlerta(
-          "erro",
-          this.erroPedido
-        );
-
-        return;
-      }
-
-      this.enviando = true;
-
-      const agora =
-        new Date().toISOString();
-
-      const pedido = {
-        usuarioId: this.usuario.id,
-
-        nome:
-          this.nomeCliente.trim(),
-
-        tamanho: {
-          id:
-            this.tamanhoSelecionado.id,
-
-          descricao:
-            this.tamanhoSelecionado.descricao,
-
-          valor: Number(
-            this.tamanhoSelecionado.valor
-          ),
-        },
-
-        sabores:
-          this.listaSaboresSelecionados.map(
-            (sabor) => ({
-              ...sabor,
-            })
-          ),
-
-        borda:
-          this.bordaSelecionada
-            ? {
-                ...this.bordaSelecionada,
-                valor: Number(
-                  this.bordaSelecionada.valor || 0
-                ),
-              }
-            : null,
-
-        bebidas:
-          this.listaBebidasSelecionadas.map(
-            (bebida) => ({
-              ...bebida,
-              valor: Number(
-                bebida.valor || 0
-              ),
-            })
-          ),
-
-        pizza: {
-          ...this.pizza,
-          valor: 0,
-        },
-
-        statusId: 5,
-
-        total: Number(
-          this.totalPedido
-        ),
-
-        observacao:
-          this.observacao.trim(),
-
-        dataPedido: agora,
-
-        atualizadoEm: agora,
-      };
+      this.carregando = true;
 
       try {
-        const pedidoCriado =
-          await criarPedido(pedido);
+        if (!this.usuario) {
+          this.usuario =
+            obterUsuarioAtual();
+        }
 
-        console.log(
-          "Pedido criado:",
-          pedidoCriado
-        );
-
-        this.exibirAlerta(
-          "sucesso",
-          `Pedido realizado com sucesso! Total: ${this.formatarMoeda(
-            this.totalPedido
-          )}`
-        );
-
-        setTimeout(() => {
-          this.$router.push(
-            "/meus-pedidos"
+        if (!this.usuario) {
+          await this.$router.push(
+            "/login"
           );
-        }, 800);
+
+          return;
+        }
+
+        const [
+          pedidos,
+          status,
+        ] = await Promise.all([
+          listarPedidosDoUsuario(
+            this.usuario.id
+          ),
+
+          listarStatusPedido(),
+        ]);
+
+        this.pedidos =
+          pedidos || [];
+
+        this.status =
+          status || [];
       } catch (error) {
         console.error(
-          "Erro ao criar pedido:",
+          "Erro ao carregar pedidos:",
           error
         );
 
-        this.erroPedido =
+        this.erro =
           error?.message ||
-          "Não foi possível realizar o pedido.";
-
-        this.exibirAlerta(
-          "erro",
-          this.erroPedido
-        );
+          "Não foi possível carregar seus pedidos.";
       } finally {
-        this.enviando = false;
+        this.carregando = false;
       }
+    },
+
+    descricaoStatus(statusId) {
+      const encontrado =
+        this.status.find(
+          (item) =>
+            Number(item.id) ===
+            Number(statusId)
+        );
+
+      return encontrado
+        ? encontrado.descricao
+        : "Status desconhecido";
+    },
+
+    statusClass(statusId) {
+      const id =
+        Number(statusId);
+
+      if (id === 1) {
+        return "accepted";
+      }
+
+      if (id === 2) {
+        return "preparing";
+      }
+
+      if (id === 3) {
+        return "delivery";
+      }
+
+      if (
+        id === 4 ||
+        id === 6
+      ) {
+        return "finished";
+      }
+
+      if (id === 7) {
+        return "cancelled";
+      }
+
+      return "pending";
+    },
+
+    progressoStatus(statusId) {
+      const id =
+        Number(statusId);
+
+      if (id === 5) {
+        return "10%";
+      }
+
+      if (id === 1) {
+        return "25%";
+      }
+
+      if (id === 2) {
+        return "50%";
+      }
+
+      if (id === 3) {
+        return "75%";
+      }
+
+      if (
+        id === 4 ||
+        id === 6
+      ) {
+        return "100%";
+      }
+
+      if (id === 7) {
+        return "0%";
+      }
+
+      return "0%";
     },
 
     formatarMoeda(valor) {
@@ -718,340 +535,870 @@ export default {
         "pt-BR",
         {
           style: "currency",
+
           currency: "BRL",
         }
       );
+    },
+
+    totalBebidas(pedido) {
+      if (
+        !pedido.bebidas ||
+        !pedido.bebidas.length
+      ) {
+        return 0;
+      }
+
+      return pedido.bebidas.reduce(
+        (soma, bebida) =>
+          soma +
+          Number(
+            bebida.valor || 0
+          ),
+        0
+      );
+    },
+
+    totalPedido(pedido) {
+      /*
+      |--------------------------------------------------------------------------
+      | Pedidos novos
+      |--------------------------------------------------------------------------
+      |
+      | O PedidoComponent já salva o total pronto.
+      |
+      */
+
+      if (
+        pedido.total !== undefined &&
+        pedido.total !== null
+      ) {
+        return Number(
+          pedido.total
+        );
+      }
+
+      /*
+      |--------------------------------------------------------------------------
+      | Compatibilidade com pedidos antigos
+      |--------------------------------------------------------------------------
+      */
+
+      let total =
+        Number(
+          pedido.tamanho?.valor ||
+          pedido.pizza?.valor ||
+          0
+        );
+
+      total +=
+        Number(
+          pedido.borda?.valor ||
+          0
+        );
+
+      total +=
+        this.totalBebidas(
+          pedido
+        );
+
+      return total;
+    },
+
+    formatarData(data) {
+      if (!data) {
+        return "Data não informada";
+      }
+
+      const valor =
+        new Date(data);
+
+      if (
+        Number.isNaN(
+          valor.getTime()
+        )
+      ) {
+        return data;
+      }
+
+      return valor.toLocaleString(
+        "pt-BR",
+        {
+          day: "2-digit",
+
+          month: "2-digit",
+
+          year: "numeric",
+
+          hour: "2-digit",
+
+          minute: "2-digit",
+        }
+      );
+    },
+
+    imagemErro(event) {
+      event.target.onerror =
+        null;
+
+      event.target.src =
+        `${process.env.BASE_URL}img/logo_tpizza.svg`;
     },
   },
 };
 </script>
 
 <style scoped>
-.pedido-page {
-  width: min(1050px, calc(100% - 32px));
-  margin: 40px auto 70px;
+.page {
+  min-height:
+    calc(100vh - 78px);
+
+  padding:
+    55px 20px 80px;
+
+  background:
+    #f7f4f2;
+
   text-align: left;
 }
 
-#pedido-form {
-  width: 100%;
-}
-
-.pizza-preview {
-  position: relative;
-  height: 320px;
-  overflow: hidden;
-  margin-bottom: 25px;
-  border-radius: 20px;
-  background: #211511;
-  box-shadow:
-    0 18px 50px
-    rgba(44, 22, 15, 0.18);
-}
-
-#foto-content {
-  width: 100%;
-  height: 100%;
-  display: block;
-  object-fit: cover;
-}
-
-.pizza-preview::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(
-      transparent 25%,
-      rgba(0, 0, 0, 0.85)
+.container {
+  width:
+    min(
+      1050px,
+      100%
     );
+
+  margin: auto;
 }
 
-.pizza-overlay {
-  position: absolute;
-  z-index: 2;
-  left: 30px;
-  right: 30px;
-  bottom: 27px;
+/*
+|--------------------------------------------------------------------------
+| HEADER
+|--------------------------------------------------------------------------
+*/
+
+.header {
+  margin-bottom:
+    35px;
+
+  display: flex;
+
+  justify-content:
+    space-between;
+
+  align-items:
+    flex-end;
+
+  gap: 25px;
 }
 
-.pizza-overlay h1 {
-  margin: 0 0 5px;
-  color: white;
+.eyebrow {
+  color: #db4826;
+
+  font-size: 11px;
+
+  font-weight: 900;
+
+  letter-spacing:
+    2px;
+}
+
+.header h1 {
+  margin:
+    7px 0 8px;
+
+  color: #241612;
+
   font-size: 38px;
 }
 
-.pizza-overlay p {
+.header p {
   margin: 0;
-  color: #f0dcd5;
+
+  color: #786a65;
+
+  line-height: 1.5;
 }
 
-.form-card {
-  width: min(760px, 100%);
-  margin: auto;
-  padding: 32px;
-  border: 1px solid #eadfd9;
-  border-radius: 20px;
-  background: white;
-  box-shadow:
-    0 12px 40px
-    rgba(45, 26, 20, 0.07);
-}
+.new-order,
+.empty a {
+  min-height: 47px;
 
-.form-header {
-  margin-bottom: 30px;
-}
+  padding:
+    0 20px;
 
-.form-header > span {
-  color: #dc4b29;
-  font-size: 11px;
-  font-weight: 900;
-  letter-spacing: 2px;
-}
+  display:
+    inline-flex;
 
-.form-header h2 {
-  margin: 6px 0;
-  color: #281914;
-  font-size: 28px;
-}
+  align-items:
+    center;
 
-.form-header p {
-  margin: 0;
-  color: #83736d;
-}
+  justify-content:
+    center;
 
-.inputs {
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 25px;
-}
+  border-radius:
+    12px;
 
-.inputs > label {
-  margin-bottom: 9px;
-  color: #3f2e28;
-  font-size: 13px;
-  font-weight: 900;
-}
-
-input,
-select,
-textarea {
-  width: 100%;
-  border: 1px solid #ded2cd;
-  border-radius: 11px;
-  outline: none;
-  background: white;
-  color: #392721;
-  font-size: 14px;
-}
-
-input,
-select {
-  min-height: 48px;
-  padding: 0 13px;
-}
-
-textarea {
-  min-height: 105px;
-  padding: 13px;
-  resize: vertical;
-}
-
-input:focus,
-select:focus,
-textarea:focus {
-  border-color: #df4b29;
-  box-shadow:
-    0 0 0 3px
-    rgba(223, 75, 41, 0.1);
-}
-
-.preco-tamanho {
-  margin: -10px 0 25px;
-  padding: 16px 18px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border: 1px solid #f1c9bc;
-  border-radius: 13px;
-  background: #fff5f1;
-}
-
-.preco-tamanho small {
-  display: block;
-  color: #ae7665;
-  font-size: 9px;
-  font-weight: 900;
-}
-
-.preco-tamanho strong {
-  color: #463029;
-}
-
-.preco-tamanho > span {
-  color: #d74724;
-  font-size: 22px;
-  font-weight: 900;
-}
-
-.ajuda {
-  margin: -3px 0 12px;
-  color: #8c7b75;
-  font-size: 12px;
-}
-
-.opcoes-grid {
-  display: grid;
-  grid-template-columns:
-    repeat(auto-fit, minmax(220px, 1fr));
-  gap: 10px;
-}
-
-.opcao {
-  min-height: 65px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px;
-  border: 1px solid #e9dfdb;
-  border-radius: 12px;
-  background: #fbf9f8;
-  cursor: pointer;
-}
-
-.opcao.selecionado {
-  border-color: #e35331;
-  background: #fff3ef;
-}
-
-.opcao input {
-  width: 17px;
-  height: 17px;
-  min-height: auto;
-}
-
-.opcao strong,
-.opcao small {
-  display: block;
-}
-
-.opcao strong {
-  margin-bottom: 3px;
-  color: #3c2a24;
-}
-
-.opcao small {
-  color: #8a7872;
-  font-size: 11px;
-}
-
-.resumo {
-  margin: 10px 0 22px;
-  padding: 20px;
-  border-radius: 15px;
-  background: #faf6f4;
-}
-
-.resumo h3 {
-  margin: 0 0 15px;
-}
-
-.resumo-linha {
-  padding: 8px 0;
-  display: flex;
-  justify-content: space-between;
-  gap: 20px;
-  border-bottom: 1px solid #eee3df;
-}
-
-.resumo-linha span {
-  color: #887670;
-}
-
-.resumo-linha strong {
-  text-align: right;
-  color: #44312a;
-}
-
-.resumo-total {
-  margin-top: 12px;
-  padding-top: 14px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.resumo-total span {
-  font-weight: 900;
-}
-
-.resumo-total strong {
-  color: #d94725;
-  font-size: 25px;
-}
-
-.erro-pedido {
-  margin-bottom: 14px;
-  padding: 13px;
-  border: 1px solid #f2b8ae;
-  border-radius: 10px;
-  background: #fff0ed;
-  color: #aa3926;
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.submit-btn {
-  width: 100%;
-  min-height: 56px;
-  border: none;
-  border-radius: 13px;
   background:
     linear-gradient(
       135deg,
-      #f15b34,
-      #c8351b
+      #ee5831,
+      #c83a1f
     );
+
   color: white;
-  font-size: 15px;
+
+  font-size: 14px;
+
   font-weight: 900;
+
+  text-decoration: none;
+
+  box-shadow:
+    0 8px 20px
+    rgba(
+      199,
+      58,
+      31,
+      0.18
+    );
+}
+
+/*
+|--------------------------------------------------------------------------
+| PEDIDOS
+|--------------------------------------------------------------------------
+*/
+
+.orders {
+  display: grid;
+
+  gap: 22px;
+}
+
+.order-card {
+  overflow: hidden;
+
+  border:
+    1px solid #e7ded9;
+
+  border-radius:
+    20px;
+
+  background: white;
+
+  box-shadow:
+    0 12px 35px
+    rgba(
+      55,
+      27,
+      17,
+      0.06
+    );
+}
+
+.order-top {
+  padding:
+    22px 25px;
+
+  display: flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    space-between;
+
+  gap: 20px;
+
+  border-bottom:
+    1px solid #eee6e2;
+}
+
+.order-number small,
+.order-footer small {
+  display: block;
+
+  color: #9b8c86;
+
+  font-size: 10px;
+
+  letter-spacing:
+    1.4px;
+
+  font-weight: 900;
+}
+
+.order-number h2 {
+  margin:
+    3px 0 0;
+
+  color: #291914;
+
+  font-size: 23px;
+}
+
+/*
+|--------------------------------------------------------------------------
+| STATUS BADGE
+|--------------------------------------------------------------------------
+*/
+
+.status {
+  padding:
+    8px 13px;
+
+  border-radius:
+    999px;
+
+  font-size: 11px;
+
+  font-weight: 900;
+}
+
+.pending {
+  background:
+    #fff1c9;
+
+  color:
+    #956600;
+}
+
+.accepted {
+  background:
+    #dff8e8;
+
+  color:
+    #24783f;
+}
+
+.preparing {
+  background:
+    #ffe4cf;
+
+  color:
+    #a64e16;
+}
+
+.delivery {
+  background:
+    #e2ecff;
+
+  color:
+    #315faa;
+}
+
+.finished {
+  background:
+    #e2f5eb;
+
+  color:
+    #216944;
+}
+
+.cancelled {
+  background:
+    #ffe0dd;
+
+  color:
+    #a2382d;
+}
+
+/*
+|--------------------------------------------------------------------------
+| CONTEÚDO
+|--------------------------------------------------------------------------
+*/
+
+.order-content {
+  padding: 25px;
+}
+
+.pizza {
+  margin-bottom:
+    24px;
+
+  display: flex;
+
+  align-items:
+    center;
+
+  gap: 17px;
+}
+
+.pizza img {
+  width: 95px;
+
+  height: 95px;
+
+  object-fit:
+    cover;
+
+  border-radius:
+    15px;
+
+  background:
+    #eee7e3;
+}
+
+.pizza-info small {
+  display: block;
+
+  margin-bottom:
+    4px;
+
+  color: #a08e87;
+
+  font-size: 9px;
+
+  font-weight: 900;
+
+  letter-spacing:
+    1.4px;
+}
+
+.pizza h3 {
+  margin:
+    0 0 5px;
+
+  color: #241612;
+
+  font-size: 21px;
+}
+
+.pizza p {
+  margin: 0;
+
+  color: #887872;
+
+  font-size: 13px;
+}
+
+.details {
+  border-top:
+    1px solid #f0e9e6;
+}
+
+.detail {
+  min-height: 58px;
+
+  padding:
+    12px 0;
+
+  display: flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    space-between;
+
+  gap: 25px;
+
+  border-bottom:
+    1px solid #f0e9e6;
+}
+
+.detail > div {
+  min-width: 0;
+
+  display: flex;
+
+  flex-direction:
+    column;
+
+  gap: 4px;
+}
+
+.detail strong {
+  color: #46342e;
+
+  font-size: 12px;
+}
+
+.detail span {
+  color: #81716b;
+
+  font-size: 13px;
+
+  line-height: 1.4;
+}
+
+.detail-value {
+  flex-shrink: 0;
+
+  color: #d84826 !important;
+
+  font-weight: 900;
+}
+
+.observation {
+  background:
+    #fffaf8;
+
+  margin-top:
+    12px;
+
+  padding:
+    14px;
+
+  border: 0;
+
+  border-radius:
+    11px;
+}
+
+/*
+|--------------------------------------------------------------------------
+| STATUS PROGRESS
+|--------------------------------------------------------------------------
+*/
+
+.status-area {
+  padding:
+    20px 25px;
+
+  border-top:
+    1px solid #eee7e3;
+
+  background:
+    #fcfaf9;
+}
+
+.status-title {
+  margin-bottom:
+    12px;
+
+  display: flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    space-between;
+
+  gap: 20px;
+}
+
+.status-title span {
+  color: #8b7a74;
+
+  font-size: 11px;
+}
+
+.status-title strong {
+  color: #43302a;
+
+  font-size: 12px;
+}
+
+.status-track {
+  width: 100%;
+
+  height: 6px;
+
+  overflow: hidden;
+
+  border-radius:
+    100px;
+
+  background:
+    #eadfd9;
+}
+
+.status-progress {
+  height: 100%;
+
+  border-radius:
+    100px;
+
+  background:
+    linear-gradient(
+      90deg,
+      #ee5b34,
+      #cb3b20
+    );
+
+  transition:
+    width 0.4s ease;
+}
+
+.status-labels {
+  margin-top:
+    8px;
+
+  display: flex;
+
+  justify-content:
+    space-between;
+
+  gap: 10px;
+}
+
+.status-labels span {
+  color: #a3928b;
+
+  font-size: 9px;
+}
+
+/*
+|--------------------------------------------------------------------------
+| FOOTER
+|--------------------------------------------------------------------------
+*/
+
+.order-footer {
+  padding:
+    19px 25px;
+
+  display: flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    space-between;
+
+  gap: 25px;
+
+  border-top:
+    1px solid #eee7e3;
+
+  background:
+    #f8f4f2;
+}
+
+.order-footer strong {
+  display: block;
+
+  margin-top: 4px;
+
+  color: #33211b;
+
+  font-size: 13px;
+}
+
+.total {
+  text-align: right;
+}
+
+.total strong {
+  color: #d64322;
+
+  font-size: 22px;
+
+  font-weight: 900;
+}
+
+/*
+|--------------------------------------------------------------------------
+| VAZIO / CARREGAMENTO
+|--------------------------------------------------------------------------
+*/
+
+.state-card,
+.empty {
+  padding:
+    55px 30px;
+
+  border:
+    1px solid #e8dfda;
+
+  border-radius:
+    20px;
+
+  background: white;
+
+  text-align: center;
+
+  box-shadow:
+    0 10px 35px
+    rgba(
+      55,
+      27,
+      17,
+      0.05
+    );
+}
+
+.state-card p,
+.empty p {
+  color: #887872;
+
+  line-height: 1.6;
+}
+
+.state-card h2,
+.empty h2 {
+  margin:
+    12px 0 7px;
+
+  color: #2c1b16;
+}
+
+.state-card button {
+  margin-top:
+    12px;
+
+  padding:
+    10px 15px;
+
+  border: 0;
+
+  border-radius:
+    9px;
+
+  background:
+    #de4a28;
+
+  color: white;
+
+  font-weight: 800;
+
   cursor: pointer;
 }
 
-.submit-btn:hover:not(:disabled) {
-  transform: translateY(-2px);
+.state-icon {
+  width: 45px;
+
+  height: 45px;
+
+  margin: auto;
+
+  display: grid;
+
+  place-items:
+    center;
+
+  border-radius:
+    50%;
+
+  background:
+    #ffe3de;
+
+  color:
+    #ac3928;
+
+  font-size: 22px;
+
+  font-weight: 900;
 }
 
-.submit-btn:disabled {
-  opacity: 0.6;
-  cursor: wait;
+.empty-icon {
+  font-size: 50px;
 }
 
-@media (max-width: 650px) {
-  .pedido-page {
-    width: calc(100% - 22px);
+.empty a {
+  margin-top:
+    10px;
+}
+
+.error {
+  color: #b33c29;
+}
+
+.spinner {
+  width: 38px;
+
+  height: 38px;
+
+  margin:
+    0 auto 15px;
+
+  border:
+    4px solid #f0e1dc;
+
+  border-top-color:
+    #dc4a28;
+
+  border-radius:
+    50%;
+
+  animation:
+    girar 0.75s
+    linear infinite;
+}
+
+@keyframes girar {
+  to {
+    transform:
+      rotate(360deg);
+  }
+}
+
+/*
+|--------------------------------------------------------------------------
+| MOBILE
+|--------------------------------------------------------------------------
+*/
+
+@media (
+  max-width: 650px
+) {
+  .page {
+    padding:
+      35px 12px
+      60px;
   }
 
-  .pizza-preview {
-    height: 240px;
+  .header {
+    align-items:
+      stretch;
+
+    flex-direction:
+      column;
   }
 
-  .pizza-overlay {
-    left: 18px;
-    right: 18px;
-    bottom: 18px;
+  .header h1 {
+    font-size:
+      31px;
   }
 
-  .pizza-overlay h1 {
-    font-size: 27px;
+  .new-order {
+    width: 100%;
   }
 
-  .form-card {
-    padding: 22px 17px;
+  .order-top {
+    align-items:
+      flex-start;
   }
 
-  .opcoes-grid {
-    grid-template-columns: 1fr;
+  .pizza {
+    align-items:
+      flex-start;
+  }
+
+  .pizza img {
+    width: 78px;
+
+    height: 78px;
+  }
+
+  .detail {
+    align-items:
+      flex-start;
+
+    flex-direction:
+      column;
+
+    gap: 7px;
+  }
+
+  .status-labels {
+    font-size: 8px;
+  }
+
+  .order-footer {
+    align-items:
+      flex-start;
+
+    flex-direction:
+      column;
+  }
+
+  .total {
+    text-align: left;
   }
 }
 </style>
