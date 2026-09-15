@@ -1,12 +1,17 @@
 <template>
   <div class="menu-page">
     <div class="menu-header">
-      <span>TPIZZA ARTESANAL</span>
+      <span>
+        LA FARINA
+      </span>
 
-      <h1>Nosso Cardápio</h1>
+      <h1>
+        Nosso Cardápio
+      </h1>
 
       <p>
-        Escolha sua pizza favorita e depois selecione o tamanho.
+        Escolha sua pizza favorita
+        e depois selecione o tamanho.
       </p>
     </div>
 
@@ -46,7 +51,9 @@
           </p>
 
           <button
-            @click="selecionarPizza(pizza)"
+            @click="
+              selecionarPizza(pizza)
+            "
           >
             Montar meu pedido
           </button>
@@ -69,9 +76,10 @@ export default {
   methods: {
     async consultarMenu() {
       try {
-        const response = await fetch(
-          `${this.$apiUrl}/menu`
-        );
+        const response =
+          await fetch(
+            `${this.$apiUrl}/menu`
+          );
 
         if (!response.ok) {
           throw new Error();
@@ -90,7 +98,9 @@ export default {
       }
     },
 
-    selecionarPizza(pizzaSelecionada) {
+    selecionarPizza(
+      pizzaSelecionada
+    ) {
       const param =
         JSON.stringify(
           pizzaSelecionada
@@ -124,10 +134,11 @@ export default {
 
 <style scoped>
 .menu-page {
-  width: min(
-    1180px,
-    calc(100% - 32px)
-  );
+  width:
+    min(
+      1180px,
+      calc(100% - 32px)
+    );
 
   margin: 0 auto 60px;
 
@@ -147,7 +158,7 @@ export default {
 
   font-weight: 900;
 
-  letter-spacing: 2px;
+  letter-spacing: 3px;
 }
 
 .menu-header h1 {
@@ -187,7 +198,8 @@ export default {
 
   overflow: hidden;
 
-  border: 1px solid #e5dcd8;
+  border:
+    1px solid #e5dcd8;
 
   border-radius: 17px;
 
@@ -201,7 +213,8 @@ export default {
 }
 
 #card-content:hover {
-  transform: translateY(-5px);
+  transform:
+    translateY(-5px);
 
   box-shadow:
     0 18px 42px
@@ -229,7 +242,8 @@ export default {
   transition: 0.4s ease;
 }
 
-#card-content:hover .foto-pizza {
+#card-content:hover
+.foto-pizza {
   transform: scale(1.04);
 }
 
@@ -248,6 +262,7 @@ export default {
   color: white;
 
   font-size: 9px;
+
   font-weight: 900;
 
   letter-spacing: 1px;
@@ -289,6 +304,7 @@ export default {
   color: #c94223;
 
   font-size: 11px;
+
   font-weight: 800;
 }
 
@@ -332,7 +348,8 @@ export default {
 }
 
 .card-coluna button:hover {
-  transform: translateY(-2px);
+  transform:
+    translateY(-2px);
 
   box-shadow:
     0 8px 18px
@@ -341,7 +358,8 @@ export default {
 
 @media (max-width: 600px) {
   .menu-page {
-    width: calc(100% - 22px);
+    width:
+      calc(100% - 22px);
   }
 
   .menu-header h1 {
@@ -349,7 +367,8 @@ export default {
   }
 
   #lista-cardapio {
-    grid-template-columns: 1fr;
+    grid-template-columns:
+      1fr;
   }
 }
 </style>
