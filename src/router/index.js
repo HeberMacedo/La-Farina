@@ -1,270 +1,137 @@
-import {
-  createRouter,
-  createWebHashHistory,
-} from "vue-router";
+import { createRouter, createWebHashHistory } from "vue-router";
 
 import MenuView from "@/views/MenuView.vue";
-
+import PedidosView from "@/views/PedidosView.vue";
 import ConfiguracaoPedidoView from "@/views/ConfiguracaoPedidoView.vue";
 
 import {
   obterUsuarioAtual,
 } from "@/services/auth";
 
-const LoginView = () =>
-  import(
-    "@/views/LoginView.vue"
-  );
+const LoginView = () => import("@/views/LoginView.vue");
 
 const CadastroView = () =>
-  import(
-    "@/views/CadastroView.vue"
-  );
+  import("@/views/CadastroView.vue");
 
 const MeusPedidosView = () =>
-  import(
-    "@/views/MeusPedidosView.vue"
-  );
+  import("@/views/MeusPedidosView.vue");
 
 const AdminPedidosView = () =>
-  import(
-    "@/views/AdminPedidosView.vue"
-  );
+  import("@/views/AdminPedidosView.vue");
 
 const routes = [
   {
     path: "/",
-
     redirect: "/menu",
   },
 
-  /*
-  |--------------------------------------------------------------------------
-  | CARDÁPIO
-  |--------------------------------------------------------------------------
-  */
-
   {
     path: "/menu",
-
     name: "menu",
-
     component: MenuView,
   },
 
-  /*
-  |--------------------------------------------------------------------------
-  | LOGIN
-  |--------------------------------------------------------------------------
-  */
-
   {
     path: "/login",
-
     name: "login",
-
     component: LoginView,
-
     meta: {
       guestOnly: true,
     },
   },
-
-  /*
-  |--------------------------------------------------------------------------
-  | CADASTRO
-  |--------------------------------------------------------------------------
-  */
 
   {
     path: "/cadastro",
-
     name: "cadastro",
-
     component: CadastroView,
-
     meta: {
       guestOnly: true,
     },
   },
 
-  /*
-  |--------------------------------------------------------------------------
-  | FAZER PEDIDO
-  |--------------------------------------------------------------------------
-  |
-  | O cliente entra nessa página,
-  | escolhe uma pizza e depois
-  | configura o pedido.
-  |
-  */
-
   {
     path: "/config-pedido",
-
     name: "config-pedido",
-
-    component:
-      ConfiguracaoPedidoView,
-
+    component: ConfiguracaoPedidoView,
     meta: {
       requiresAuth: true,
-
       usuarioOnly: true,
     },
   },
 
-  /*
-  |--------------------------------------------------------------------------
-  | MEUS PEDIDOS
-  |--------------------------------------------------------------------------
-  |
-  | Somente pedidos pertencentes
-  | ao usuário autenticado.
-  |
-  */
+  {
+    path: "/pedidos",
+    name: "pedidos",
+    component: PedidosView,
+    meta: {
+      requiresAuth: true,
+    },
+  },
 
   {
     path: "/meus-pedidos",
-
     name: "meus-pedidos",
-
-    component:
-      MeusPedidosView,
-
+    component: MeusPedidosView,
     meta: {
       requiresAuth: true,
-
       usuarioOnly: true,
     },
   },
 
-  /*
-  |--------------------------------------------------------------------------
-  | ADMINISTRAÇÃO
-  |--------------------------------------------------------------------------
-  */
-
   {
     path: "/admin/pedidos",
-
     name: "admin-pedidos",
-
-    component:
-      AdminPedidosView,
-
+    component: AdminPedidosView,
     meta: {
       requiresAuth: true,
-
       adminOnly: true,
     },
   },
 
-  /*
-  |--------------------------------------------------------------------------
-  | ROTA DESCONHECIDA
-  |--------------------------------------------------------------------------
-  */
-
   {
-    path:
-      "/:pathMatch(.*)*",
-
+    path: "/:pathMatch(.*)*",
     redirect: "/menu",
   },
 ];
 
-const router =
-  createRouter({
-    history:
-      createWebHashHistory(
-        process.env.BASE_URL
-      ),
-
-    routes,
-  });
-
-/*
-|--------------------------------------------------------------------------
-| PROTEÇÃO DE ROTAS
-|--------------------------------------------------------------------------
-*/
+const router = createRouter({
+  history: createWebHashHistory(process.env.BASE_URL),
+  routes,
+});
 
 router.beforeEach((to) => {
-  const usuario =
-    obterUsuarioAtual();
+  const usuario = obterUsuarioAtual();
 
-  const autenticado =
-    Boolean(usuario);
+  const autenticado = Boolean(usuario);
 
-  /*
-  |--------------------------------------------------------------------------
-  | Precisa estar logado
-  |--------------------------------------------------------------------------
-  */
-
-  if (
-    to.meta.requiresAuth &&
-    !autenticado
-  ) {
+  if (to.meta.requiresAuth && !autenticado) {
     return {
       name: "login",
-
       query: {
-        redirect:
-          to.fullPath,
+        redirect: to.fullPath,
       },
     };
   }
 
-  /*
-  |--------------------------------------------------------------------------
-  | Somente administrador
-  |--------------------------------------------------------------------------
-  */
-
-  if (
-    to.meta.adminOnly &&
-    usuario?.tipo !== "admin"
-  ) {
+  if (to.meta.adminOnly && usuario?.tipo !== "admin") {
     return {
       name: "menu",
     };
   }
-
-  /*
-  |--------------------------------------------------------------------------
-  | Somente cliente
-  |--------------------------------------------------------------------------
-  */
 
   if (
     to.meta.usuarioOnly &&
     usuario?.tipo === "admin"
   ) {
     return {
-      name:
-        "admin-pedidos",
+      name: "admin-pedidos",
     };
   }
 
-  /*
-  |--------------------------------------------------------------------------
-  | Usuário logado tentando abrir login/cadastro
-  |--------------------------------------------------------------------------
-  */
-
-  if (
-    to.meta.guestOnly &&
-    autenticado
-  ) {
-    if (
-      usuario.tipo ===
-      "admin"
-    ) {
+  if (to.meta.guestOnly && autenticado) {
+    if (usuario.tipo === "admin") {
       return {
-        name:
-          "admin-pedidos",
+        name: "admin-pedidos",
       };
     }
 

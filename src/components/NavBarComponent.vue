@@ -1,52 +1,32 @@
 <template>
   <header class="navbar">
     <div class="navbar-container">
-      <router-link
-        to="/menu"
-        class="logo"
-      >
-        <span class="logo-symbol">
-          L
-        </span>
+      <router-link to="/menu" class="logo">
+        <span class="logo-symbol">L</span>
 
         <div class="logo-text">
-          <strong>
-            La Farina
-          </strong>
-
-          <small>
-            Pizzaria Artesanal
-          </small>
+          <strong>La Farina</strong>
+          <small>artesanal</small>
         </div>
       </router-link>
 
       <nav class="desktop-nav">
-        <router-link
-          to="/menu"
-        >
+        <router-link to="/menu">
           Cardápio
         </router-link>
 
-        <template
-          v-if="usuario && !admin"
-        >
-          <router-link
-            to="/config-pedido"
-          >
+        <template v-if="usuario && !admin">
+          <router-link to="/config-pedido">
             Fazer pedido
           </router-link>
 
-          <router-link
-            to="/meus-pedidos"
-          >
+          <router-link to="/meus-pedidos">
             Meus pedidos
           </router-link>
         </template>
 
         <template v-if="admin">
-          <router-link
-            to="/admin/pedidos"
-          >
+          <router-link to="/admin/pedidos">
             Administração
           </router-link>
         </template>
@@ -72,11 +52,7 @@
         <template v-else>
           <div class="user-info">
             <small>
-              {{
-                admin
-                  ? "Administrador"
-                  : "Olá"
-              }}
+              {{ admin ? "Administrador" : "Olá" }}
             </small>
 
             <strong>
@@ -85,7 +61,6 @@
           </div>
 
           <button
-            type="button"
             class="logout-button"
             @click="sair"
           >
@@ -108,17 +83,13 @@ export default {
 
   data() {
     return {
-      usuario:
-        obterUsuarioAtual(),
+      usuario: obterUsuarioAtual(),
     };
   },
 
   computed: {
     admin() {
-      return (
-        this.usuario?.tipo ===
-        "admin"
-      );
+      return this.usuario?.tipo === "admin";
     },
 
     primeiroNome() {
@@ -126,8 +97,7 @@ export default {
         return "";
       }
 
-      return this.usuario.nome
-        .split(" ")[0];
+      return this.usuario.nome.split(" ")[0];
     },
   },
 
@@ -153,8 +123,7 @@ export default {
 
   methods: {
     atualizarUsuario() {
-      this.usuario =
-        obterUsuarioAtual();
+      this.usuario = obterUsuarioAtual();
     },
 
     async sair() {
@@ -162,9 +131,7 @@ export default {
 
       this.usuario = null;
 
-      await this.$router.push(
-        "/login"
-      );
+      await this.$router.push("/login");
     },
   },
 };
@@ -175,38 +142,25 @@ export default {
   width: 100%;
   position: relative;
   z-index: 100;
-
   background: #17100d;
-
-  border-bottom:
-    1px solid
-    rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .navbar-container {
-  width:
-    min(
-      1180px,
-      calc(100% - 40px)
-    );
-
+  width: min(1180px, calc(100% - 40px));
   min-height: 78px;
-
   margin: 0 auto;
 
   display: flex;
   align-items: center;
   justify-content: space-between;
-
   gap: 25px;
 }
 
 .logo {
   display: flex;
   align-items: center;
-
   gap: 10px;
-
   color: white;
 }
 
@@ -219,12 +173,11 @@ export default {
 
   border-radius: 12px;
 
-  background:
-    linear-gradient(
-      135deg,
-      #f5643b,
-      #bd2d18
-    );
+  background: linear-gradient(
+    135deg,
+    #f5643b,
+    #bd2d18
+  );
 
   color: white;
 
@@ -239,7 +192,7 @@ export default {
 .logo-text strong {
   display: block;
 
-  font-size: 17px;
+  font-size: 16px;
 }
 
 .logo-text small {
@@ -249,11 +202,11 @@ export default {
 
   color: #bba9a4;
 
-  font-size: 8px;
+  font-size: 9px;
 
   text-transform: uppercase;
 
-  letter-spacing: 1.5px;
+  letter-spacing: 1.6px;
 }
 
 .desktop-nav {
@@ -261,21 +214,16 @@ export default {
 
   display: flex;
   justify-content: center;
-
   gap: 30px;
 
   padding: 0;
 }
 
 .desktop-nav a {
-  position: relative;
-
-  padding: 29px 0;
-
   color: #cfc2be;
 
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 600;
 
   transition: 0.2s;
 }
@@ -284,32 +232,13 @@ export default {
   color: white;
 }
 
-.desktop-nav
-  a.router-link-active {
+.desktop-nav a.router-link-active {
   color: #ff7049;
-}
-
-.desktop-nav
-  a.router-link-active::after {
-  content: "";
-
-  position: absolute;
-
-  left: 0;
-  right: 0;
-  bottom: 19px;
-
-  height: 2px;
-
-  border-radius: 10px;
-
-  background: #ff7049;
 }
 
 .navbar-actions {
   display: flex;
   align-items: center;
-
   gap: 13px;
 }
 
@@ -331,15 +260,6 @@ export default {
 
   font-size: 13px;
   font-weight: 800;
-
-  transition: 0.2s;
-}
-
-.register-button:hover {
-  transform:
-    translateY(-1px);
-
-  background: #f05a36;
 }
 
 .user-info {
@@ -365,8 +285,7 @@ export default {
 .logout-button {
   padding: 9px 12px;
 
-  border:
-    1px solid #453630;
+  border: 1px solid #453630;
 
   border-radius: 9px;
 
@@ -384,9 +303,7 @@ export default {
 
 @media (max-width: 800px) {
   .navbar-container {
-    width:
-      calc(100% - 24px);
-
+    width: calc(100% - 24px);
     min-height: 68px;
   }
 
@@ -395,7 +312,7 @@ export default {
   }
 
   .logo-text {
-    display: block;
+    display: none;
   }
 
   .user-info {
@@ -404,12 +321,6 @@ export default {
 
   .register-button {
     padding: 10px 12px;
-  }
-}
-
-@media (max-width: 480px) {
-  .logo-text {
-    display: none;
   }
 }
 </style>
