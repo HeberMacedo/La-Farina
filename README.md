@@ -49,3 +49,23 @@ A aplicação conta com um sistema modular de notificações integradas no compo
 *   **Estilização:** CSS3 Avançado (Escopo Isolado / Scoped CSS, Flexbox, Máscaras e Transições)
 *   **Hospedagem Front-end:** [Vercel](https://vercel.com/) (Ambiente seguro integrado com HTTPS e deploy automatizado)
 *   **Persistência de Dados:** [Render Cloud](https://render.com/) (Hospedagem remota da API RESTful simulada via JSON Server)
+
+---
+
+## Organização Estrutural do Código
+
+```markdown
+├── public/
+│   ├── img/               # Recursos visuais (Banner, Logo Circular e Ícones)
+│   └── index.html         # Template HTML principal injetado pelo Webpack
+├── src/
+│   ├── components/        # Componentes reutilizáveis (NavBar, Banner, Mensagem)
+│   ├── views/             # Telas principais mapeadas pelas rotas da aplicação
+│   ├── router/            # Configurações de navegação SPA (Single Page Application)
+│   ├── App.vue            # Componente raiz da aplicação
+│   └── main.js            # Inicialização e montagem do ecossistema Vue
+├── vue.config.js          # Configurações globais de compilação do Vue CLI
+└── package.json           # Dependências e scripts de automação do projeto
+```
+## Autoria e Contribuição
+Desenvolvido por Maria Clara Bertin Vieira Ferreira, Marco Antonio de Melo Peixoto, Heber Americo Macedo, Thaynara Lima Soares Sousa.
