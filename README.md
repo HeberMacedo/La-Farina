@@ -6,7 +6,7 @@ A **La Farina** é um sistema de gerenciamento e monitoramento de pedidos em tem
 
 ##  Demonstração Ativa
 
-*   **📱 Aplicação Web (Produção):** [https://hebermacedo.github.io/tpizza-artesanal/#/menu](LaFarina)
+*   **📱 Aplicação Web (Produção):** [https://hebermacedo.github.io/tpizza-artesanal/#/menu](https://hebermacedo.github.io/tpizza-artesanal/#/menu)
 *   **⚙️ Banco de Dados & API REST:** 
 
 >  **Nota sobre o carregamento inicial (Cold Start):** Como a API está hospedada na camada gratuita do *Render Cloud*, o servidor entra em modo de repouso após 15 minutos de inatividade. Ao abrir a aplicação pela primeira vez, as opções de pizza podem levar entre **30 e 50 segundos** para carregar enquanto o banco de dados "acorda". Caso as pizzas não apareçam de imediato, basta aguardar alguns instantes e atualizar a página (`F5`). Os acessos seguintes serão instantâneos!
