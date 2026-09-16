@@ -23,3 +23,29 @@ A identidade do projeto foi construída para traduzir a identidade visual da gas
 *   **Off-White Antigo (`#faf9f6`):** Fundo suave que evita a fadiga visual e simula os menus de papel texturizado das tratorias europeias.
 
 ---
+## Funcionalidades Principais
+
+*   **Seleção Dinâmica do Menu:** Catálogo reativo que renderiza as pizzas da cozinha diretamente da API com animações fluidas de foco (*hover*).
+*   **Customização Avançada:** Formulário inteligente adaptado para o modelo de negócios de pizzarias, permitindo a escolha de tamanhos específicos, bordas recheadas e acompanhamentos.
+*   **Barra de Navegação Customizada:** Utilização de máscaras geométricas CSS (`clip-path`) para garantir o encaixe e renderização perfeita da logo circular do restaurante.
+*   **Validação em Camadas (Client-side):** Bloqueio de requisições incompletas, garantindo que nenhum pedido seja enviado ao forno sem campos cruciais (como nome e tamanho).
+*   **Painel de Monitoramento (Live Update):** Sincronização dinâmica com o banco de dados que atualiza as linhas de produção, altera status e remove itens da tela instantaneamente através de manipulação reativa do DOM (sem recarregamento artificial da página).
+
+---
+
+## Componente de Feedback Semântico
+
+A aplicação conta com um sistema modular de notificações integradas no componente `MensagemComponent.vue`. Ele altera dinamicamente sua estrutura visual, ícones e cores com base no contexto de resposta do sistema:
+
+*   🟢 **Sucesso (Verde):** Exibido em cadastros concluídos, seguido de um redirecionamento automático de UX para a área de acompanhamento;
+*   🔴 **Erro (Vermelho):** Bloqueios de envio por campos obrigatórios vazios;
+*   🟠 **Aviso (Laranja):** Notificação reativa imediata assim que um item é removido do sistema por meio do botão de lixeira.
+
+---
+
+## Tecnologias e Arquitetura
+
+*   **Framework Principal:** [Vue.js 3](https://vuejs.org/) (Arquitetura baseada em Componentes e Sistema de Rotas Dinâmicas)
+*   **Estilização:** CSS3 Avançado (Escopo Isolado / Scoped CSS, Flexbox, Máscaras e Transições)
+*   **Hospedagem Front-end:** [Vercel](https://vercel.com/) (Ambiente seguro integrado com HTTPS e deploy automatizado)
+*   **Persistência de Dados:** [Render Cloud](https://render.com/) (Hospedagem remota da API RESTful simulada via JSON Server)
