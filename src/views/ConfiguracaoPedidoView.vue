@@ -1,6 +1,6 @@
 <template>
-  <div>
-    <h1>Configuracao do Pedido</h1>
+  <div v-if="pizzaSelecionada">
+    <h1>Configuração do Pedido</h1>
 
     <pedido-component-vue
       :pizza="pizzaSelecionada"
@@ -27,15 +27,43 @@ export default {
   mounted() {
     const query = this.$route.query;
 
-    if (query.pizza) {
-      const decodePizza = JSON.parse(
+    if (!query.pizza) {
+      this.$router.replace("/menu");
+      return;
+    }
+
+    try {
+      const pizzaDecodificada = JSON.parse(
         decodeURIComponent(query.pizza)
       );
 
-      this.pizzaSelecionada = decodePizza;
+      if (!pizzaDecodificada?.id) {
+        this.$router.replace("/menu");
+        return;
+      }
+
+      this.pizzaSelecionada =
+        pizzaDecodificada;
+    } catch (error) {
+      console.error(
+        "Erro ao carregar pizza selecionada:",
+        error
+      );
+
+      this.$router.replace("/menu");
     }
   },
 };
 </script>
 
-<style scoped></style>
+<style scoped>
+h1 {
+  margin: 35px 20px 15px;
+
+  color: #2b1b16;
+
+  text-align: center;
+
+  font-size: 32px;
+}
+</style>
