@@ -52,28 +52,6 @@ A aplicação conta com um sistema modular de notificações integradas no compo
 
 ---
 
-## Execução com Docker
-
-O ambiente Docker mantém o front-end e a API JSON Server em contêineres
-separados. O Nginx encaminha as requisições de `/api` para a API pela rede
-interna do Docker, e o arquivo `db/db.json` é montado no contêiner para que os
-dados persistam entre reinicializações.
-
-```bash
-docker compose up --build -d
-```
-
-A aplicação estará disponível em `http://localhost:8080`.
-
-Para acompanhar os logs ou encerrar o ambiente:
-
-```bash
-docker compose logs -f
-docker compose down
-```
-
----
-
 ## Organização Estrutural do Código
 
 ```markdown
