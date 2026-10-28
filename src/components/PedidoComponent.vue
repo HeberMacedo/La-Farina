@@ -353,6 +353,21 @@
             </strong>
           </div>
 
+          <div class="resumo-linha">
+            <span>
+              Taxa de entrega
+            </span>
+
+            <strong>
+              +
+              {{
+                formatarMoeda(
+                  taxaEntrega
+                )
+              }}
+            </strong>
+          </div>
+
           <div class="resumo-total">
             <span>
               Total
@@ -415,6 +430,10 @@ import {
   get,
 } from "@/services/api";
 
+import {
+  TAXA_ENTREGA,
+} from "@/services/entrega";
+
 export default {
   name: "PedidoComponent",
 
@@ -446,6 +465,8 @@ export default {
       bordaSelecionada: "",
 
       listaBebidasSelecionadas: [],
+
+      taxaEntrega: TAXA_ENTREGA,
 
       observacao: "",
 
@@ -514,6 +535,10 @@ export default {
               ),
             0
           );
+
+      total += Number(
+        this.taxaEntrega || 0
+      );
 
       return total;
     },
@@ -806,6 +831,11 @@ export default {
             ),
 
         statusId: 5,
+
+        taxaEntrega:
+          Number(
+            this.taxaEntrega
+          ),
 
         total:
           Number(

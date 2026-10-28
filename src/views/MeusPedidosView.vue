@@ -258,6 +258,26 @@
                 </div>
               </div>
 
+              <!-- ENTREGA -->
+              <div
+                v-if="pedido.taxaEntrega"
+                class="detail"
+              >
+                <div>
+                  <strong>
+                    Entrega
+                  </strong>
+
+                  <span>
+                    Taxa de entrega
+                  </span>
+                </div>
+
+                <span class="detail-value">
+                  + {{ formatarMoeda(pedido.taxaEntrega) }}
+                </span>
+              </div>
+
               <!-- OBSERVAÇÃO -->
               <div
                 v-if="pedido.observacao"
@@ -600,6 +620,12 @@ export default {
       total +=
         this.totalBebidas(
           pedido
+        );
+
+      total +=
+        Number(
+          pedido.taxaEntrega ||
+          0
         );
 
       return total;

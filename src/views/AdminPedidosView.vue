@@ -178,6 +178,19 @@
                     )
                   }}
                 </strong>
+
+                <small
+                  v-if="pedido.taxaEntrega"
+                  class="taxa-entrega"
+                >
+                  inclui
+                  {{
+                    formatarMoeda(
+                      pedido.taxaEntrega
+                    )
+                  }}
+                  de entrega
+                </small>
               </div>
             </div>
 
@@ -487,6 +500,10 @@ export default {
         );
       }
 
+      total += Number(
+        pedido.taxaEntrega || 0
+      );
+
       return total;
     },
 
@@ -737,6 +754,10 @@ export default {
   padding: 14px;
   border-radius: 12px;
   background: #faf7f5;
+}
+
+.info-grid .taxa-entrega {
+  margin: 6px 0 0;
 }
 
 .info-grid small {
