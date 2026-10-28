@@ -65,6 +65,7 @@ const routes = [
     component: PedidosView,
     meta: {
       requiresAuth: true,
+      adminOnly: true,
     },
   },
 

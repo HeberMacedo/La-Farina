@@ -20,8 +20,8 @@
       >
         <div class="pedido-id">{{ pedido.id }}</div>
         <div class="pedido-cliente">{{ pedido.nome }}</div>
-        <div>{{ pedido.pizza.nome }}</div>
-        <div>{{ pedido.tamanho.descricao }}</div>
+        <div>{{ pedido.pizza?.nome || "-" }}</div>
+        <div>{{ pedido.tamanho?.descricao || "-" }}</div>
         <div class="pedido-itens">
           <p class="grupo-titulo">Sabores</p>
           <div class="etiquetas">
@@ -37,7 +37,7 @@
             </div>
           </div>
 
-          <div v-if="pedido.bebidas.length">
+          <div v-if="pedido.bebidas?.length">
             <p class="grupo-titulo">Bebidas</p>
             <div class="etiquetas">
               <span v-for="(bebida, index) in pedido.bebidas" :key="index">

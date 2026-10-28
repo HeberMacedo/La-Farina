@@ -1,4 +1,3 @@
-@ -1,878 +0,0 @@
 <template>
   <div class="admin-page">
     <div class="container">
@@ -470,7 +469,9 @@ export default {
       }
 
       let total = Number(
-        pedido.pizza?.valor || 0
+        pedido.tamanho?.valor ||
+        pedido.pizza?.valor ||
+        0
       );
 
       total += Number(

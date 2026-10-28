@@ -7,7 +7,7 @@ RUN npm ci
 
 COPY . .
 
-ARG VUE_APP_API_BASE_URL=http://localhost:3000
+ARG VUE_APP_API_BASE_URL=https://api-tpizza-artesanal.onrender.com
 ARG VUE_APP_PUBLIC_PATH=/
 
 ENV VUE_APP_API_BASE_URL=${VUE_APP_API_BASE_URL}

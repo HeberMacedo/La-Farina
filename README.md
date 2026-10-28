@@ -6,8 +6,8 @@ A **La Farina** é um sistema de gerenciamento e monitoramento de pedidos em tem
 
 ##  Demonstração Ativa
 
-*   **📱 Aplicação Web (Produção):** [https://hebermacedo.github.io/tpizza-artesanal/#/menu](https://hebermacedo.github.io/tpizza-artesanal/#/menu)
-*   **⚙️ Banco de Dados & API REST:** 
+*   **📱 Aplicação Web (Produção):** [https://hebermacedo.github.io/La-Farina/#/menu](https://hebermacedo.github.io/La-Farina/#/menu)
+*   **⚙️ Banco de Dados & API REST:** [https://api-tpizza-artesanal.onrender.com](https://api-tpizza-artesanal.onrender.com)
 
 >  **Nota sobre o carregamento inicial (Cold Start):** Como a API está hospedada na camada gratuita do *Render Cloud*, o servidor entra em modo de repouso após 15 minutos de inatividade. Ao abrir a aplicação pela primeira vez, as opções de pizza podem levar entre **30 e 50 segundos** para carregar enquanto o banco de dados "acorda". Caso as pizzas não apareçam de imediato, basta aguardar alguns instantes e atualizar a página (`F5`). Os acessos seguintes serão instantâneos!
 
@@ -35,7 +35,7 @@ A identidade do projeto foi construída para traduzir a identidade visual da gas
 
 ## Componente de Feedback Semântico
 
-A aplicação conta com um sistema modular de notificações integradas no componente `MensagemComponent.vue`. Ele altera dinamicamente sua estrutura visual, ícones e cores com base no contexto de resposta do sistema:
+A aplicação conta com um sistema modular de notificações integradas no componente `AlertaComponent.vue`. Ele altera dinamicamente sua estrutura visual, ícones e cores com base no contexto de resposta do sistema:
 
 *   🟢 **Sucesso (Verde):** Exibido em cadastros concluídos, seguido de um redirecionamento automático de UX para a área de acompanhamento;
 *   🔴 **Erro (Vermelho):** Bloqueios de envio por campos obrigatórios vazios;
@@ -47,7 +47,7 @@ A aplicação conta com um sistema modular de notificações integradas no compo
 
 *   **Framework Principal:** [Vue.js 3](https://vuejs.org/) (Arquitetura baseada em Componentes e Sistema de Rotas Dinâmicas)
 *   **Estilização:** CSS3 Avançado (Escopo Isolado / Scoped CSS, Flexbox, Máscaras e Transições)
-*   **Hospedagem Front-end:** [Vercel](https://vercel.com/) (Ambiente seguro integrado com HTTPS e deploy automatizado)
+*   **Hospedagem Front-end:** [GitHub Pages](https://pages.github.com/) (HTTPS e deploy automatizado via GitHub Actions)
 *   **Persistência de Dados:** [Render Cloud](https://render.com/) (Hospedagem remota da API RESTful simulada via JSON Server)
 
 ---
@@ -59,7 +59,7 @@ A aplicação conta com um sistema modular de notificações integradas no compo
 │   ├── img/               # Recursos visuais (Banner, Logo Circular e Ícones)
 │   └── index.html         # Template HTML principal injetado pelo Webpack
 ├── src/
-│   ├── components/        # Componentes reutilizáveis (NavBar, Banner, Mensagem)
+│   ├── components/        # Componentes reutilizáveis (NavBar, Banner, Alerta, Pedido)
 │   ├── views/             # Telas principais mapeadas pelas rotas da aplicação
 │   ├── router/            # Configurações de navegação SPA (Single Page Application)
 │   ├── App.vue            # Componente raiz da aplicação

@@ -28,19 +28,23 @@
   "tamanhos": [
     {
       "id": 1,
-      "descricao": "Pequena - 4 fatias"
+      "descricao": "Pequena - 4 fatias",
+      "valor": 30
     },
     {
       "id": 2,
-      "descricao": "Media - 6 fatias"
+      "descricao": "Media - 6 fatias",
+      "valor": 40
     },
     {
       "id": 3,
-      "descricao": "Grande - 8 fatias"
+      "descricao": "Grande - 8 fatias",
+      "valor": 50
     },
     {
       "id": 4,
-      "descricao": "Familia - 12 fatias"
+      "descricao": "Familia - 12 fatias",
+      "valor": 65
     }
   ],
   "status_pedido": [
@@ -158,7 +162,7 @@
         "nome": "Pizza Meio-a-Meio",
         "foto": "https://images.unsplash.com/photo-1594007654729-407eedc4be65?auto=format&fit=crop&w=900&q=80",
         "descricao": "Monte uma pizza com ate dois sabores da casa e escolha o tamanho ideal.",
-        "valor": 42,
+        "valor": 0,
         "eh_novidade": true
       },
       {
@@ -166,7 +170,7 @@
         "nome": "Calabresa da Casa",
         "foto": "https://images.unsplash.com/photo-1628840042765-356cda07504e?auto=format&fit=crop&w=900&q=80",
         "descricao": "Calabresa artesanal, cebola roxa, mussarela especial e oregano.",
-        "valor": 38,
+        "valor": 0,
         "eh_novidade": false
       },
       {
@@ -174,7 +178,7 @@
         "nome": "Quatro Queijos",
         "foto": "https://images.unsplash.com/photo-1548369937-47519962c11a?auto=format&fit=crop&w=900&q=80",
         "descricao": "Mussarela, parmesao, provolone e catupiry sobre molho de tomate da casa.",
-        "valor": 44,
+        "valor": 0,
         "eh_novidade": true
       },
       {
@@ -182,7 +186,7 @@
         "nome": "Frango Catupiry",
         "foto": "https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=900&q=80",
         "descricao": "Frango temperado, catupiry, milho verde e mussarela gratinada.",
-        "valor": 41,
+        "valor": 0,
         "eh_novidade": false
       }
     ]
