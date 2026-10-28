@@ -52,6 +52,32 @@ A aplicação conta com um sistema modular de notificações integradas no compo
 
 ---
 
+## Rodando com Docker
+
+Com o Docker instalado, suba o front-end e a API local (JSON Server) com um único comando:
+
+```bash
+docker compose up -d --build
+```
+
+*   **Aplicação:** [http://localhost:8080](http://localhost:8080)
+*   **API:** [http://localhost:3000](http://localhost:3000)
+
+Os dados gravados (pedidos, cadastros) ficam no volume `db-data` e sobrevivem a reinícios. Para parar e zerar o banco de volta ao `db/db.json` original:
+
+```bash
+docker compose down -v
+```
+
+Para gerar apenas a imagem do front-end apontando para a API em produção (Render):
+
+```bash
+docker build -t la-farina .
+docker run -p 8080:80 la-farina
+```
+
+---
+
 ## Organização Estrutural do Código
 
 ```markdown

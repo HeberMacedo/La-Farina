@@ -1,0 +1,28 @@
+services:
+  api:
+    build:
+      context: .
+      target: api
+    ports:
+      - "3000:3000"
+    volumes:
+      # Mantém os dados (pedidos, cadastros) entre reinícios do container
+      - db-data:/app/db
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+      target: production
+      args:
+        # O navegador acessa a API pela porta publicada no host
+        VUE_APP_API_BASE_URL: http://localhost:3000
+        VUE_APP_PUBLIC_PATH: /
+    ports:
+      - "8080:80"
+    depends_on:
+      - api
+    restart: unless-stopped
+
+volumes:
+  db-data:
