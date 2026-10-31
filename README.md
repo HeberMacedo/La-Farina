@@ -1,84 +1,43 @@
-# 🍕 La Farina
+# La Farina
 
-A **La Farina** é um sistema de gerenciamento e monitoramento de pedidos em tempo real. Desenvolvido em **Vue 3**, o ecossistema conecta uma interface de usuário altamente responsiva a uma API em nuvem, oferecendo um fluxo de navegação fluido, validações estritas de dados e uma identidade visual premium.
+Projeto desenvolvido como solução web para gestão de pedidos de pizzaria, com front-end em Vue 3 e API simulada em JSON Server.
 
----
+## Demonstração
 
-##  Demonstração Ativa
+* Aplicação web: https://hebermacedo.github.io/La-Farina/#/menu
+* API: https://api-tpizza-artesanal.onrender.com
 
-*   **📱 Aplicação Web (Produção):** [https://hebermacedo.github.io/La-Farina/#/menu](https://hebermacedo.github.io/La-Farina/#/menu)
-*   **⚙️ Banco de Dados & API REST:** [https://api-tpizza-artesanal.onrender.com](https://api-tpizza-artesanal.onrender.com)
+## Tecnologias
 
->  **Nota sobre o carregamento inicial (Cold Start):** Como a API está hospedada na camada gratuita do *Render Cloud*, o servidor entra em modo de repouso após 15 minutos de inatividade. Ao abrir a aplicação pela primeira vez, as opções de pizza podem levar entre **30 e 50 segundos** para carregar enquanto o banco de dados "acorda". Caso as pizzas não apareçam de imediato, basta aguardar alguns instantes e atualizar a página (`F5`). Os acessos seguintes serão instantâneos!
+* Vue 3
+* Vue Router
+* JSON Server
+* Docker
+* GitHub Actions
 
----
+## Como executar localmente
 
-## Design
+```bash
+npm install
+npm run bancojson
+npm run serve
+```
 
-A identidade do projeto foi construída para traduzir a identidade visual da gastronomia italiana:
+A API fica em `http://localhost:3000` e a aplicação em `http://localhost:8080` quando usada com Docker.
 
-*   **Terracota Profundo (`#5c1d24`):** Presente em títulos e preços, remetendo à tradição dos molhos artesanais.
-*   **Verde Oliva (`#556b2f`):** Utilizado em botões de ação principal, evocando ingredientes frescos e o azeite clássico.
-*   **Dourado Queimado (`#b8860b`):** Aplicado em detalhes sutis de bordas e divisores para acrescentar sofisticação.
-*   **Off-White Antigo (`#faf9f6`):** Fundo suave que evita a fadiga visual e simula os menus de papel texturizado das tratorias europeias.
-
----
-## Funcionalidades Principais
-
-*   **Seleção Dinâmica do Menu:** Catálogo reativo que renderiza as pizzas da cozinha diretamente da API com animações fluidas de foco (*hover*).
-*   **Customização Avançada:** Formulário inteligente adaptado para o modelo de negócios de pizzarias, permitindo a escolha de tamanhos específicos, bordas recheadas e acompanhamentos.
-*   **Barra de Navegação Customizada:** Utilização de máscaras geométricas CSS (`clip-path`) para garantir o encaixe e renderização perfeita da logo circular do restaurante.
-*   **Validação em Camadas (Client-side):** Bloqueio de requisições incompletas, garantindo que nenhum pedido seja enviado ao forno sem campos cruciais (como nome e tamanho).
-*   **Painel de Monitoramento (Live Update):** Sincronização dinâmica com o banco de dados que atualiza as linhas de produção, altera status e remove itens da tela instantaneamente através de manipulação reativa do DOM (sem recarregamento artificial da página).
-
----
-
-## Componente de Feedback Semântico
-
-A aplicação conta com um sistema modular de notificações integradas no componente `AlertaComponent.vue`. Ele altera dinamicamente sua estrutura visual, ícones e cores com base no contexto de resposta do sistema:
-
-*   🟢 **Sucesso (Verde):** Exibido em cadastros concluídos, seguido de um redirecionamento automático de UX para a área de acompanhamento;
-*   🔴 **Erro (Vermelho):** Bloqueios de envio por campos obrigatórios vazios;
-*   🟠 **Aviso (Laranja):** Notificação reativa imediata assim que um item é removido do sistema por meio do botão de lixeira.
-
----
-
-## Tecnologias e Arquitetura
-
-*   **Framework Principal:** [Vue.js 3](https://vuejs.org/) (Arquitetura baseada em Componentes e Sistema de Rotas Dinâmicas)
-*   **Estilização:** CSS3 Avançado (Escopo Isolado / Scoped CSS, Flexbox, Máscaras e Transições)
-*   **Hospedagem Front-end:** [GitHub Pages](https://pages.github.com/) (HTTPS e deploy automatizado via GitHub Actions)
-*   **Persistência de Dados:** [Render Cloud](https://render.com/) (Hospedagem remota da API RESTful simulada via JSON Server)
-
----
-
-## Rodando com Docker
-
-Com o Docker instalado, suba o front-end e a API local (JSON Server) com um único comando:
+## Docker
 
 ```bash
 docker compose up -d --build
 ```
 
-*   **Aplicação:** [http://localhost:8080](http://localhost:8080)
-*   **API:** [http://localhost:3000](http://localhost:3000)
-
-Os dados gravados (pedidos, cadastros) ficam no volume `db-data` e sobrevivem a reinícios. Para parar e zerar o banco de volta ao `db/db.json` original:
+Para limpar o volume local:
 
 ```bash
 docker compose down -v
 ```
 
-Para gerar apenas a imagem do front-end apontando para a API em produção (Render):
-
-```bash
-docker build -t la-farina .
-docker run -p 8080:80 la-farina
-```
-
----
-
-## Organização Estrutural do Código
+## Estrutura do projeto
 
 ```markdown
 ├── public/
@@ -131,6 +90,108 @@ docker run -p 8080:80 la-farina
 | **Pós-condições** | Pedido removido da fila de produção e da interface do painel. |
 | **Regras de negócio** | A remoção deve ser exibida como ação de alerta. O sistema deve garantir que apenas pedidos válidos sejam removidos. A exclusão deve refletir imediatamente na tela de acompanhamento. |
 | **Dados Manipulados** | Identificador do pedido, status atual, cliente associado e motivo da remoção quando informado. |
+
+## Cenários de Teste da API
+
+> Observação: os cenários abaixo representam o contrato de validação implementado para a API do projeto. A aplicação já valida campos obrigatórios e retorna respostas consistentes para erros de cliente e falhas simuladas em ambiente de teste.
+
+### Fluxos de sucesso
+
+| ID | Cenário | Endpoint | Método | Dados enviados | Status esperado | Resposta esperada |
+|---|---|---|---|---|---|---|
+| API-01 | Listar cardápio | `/menu` | `GET` | Nenhum | `200` | `{ "promocoes": [...], "pizzas": [{ "id": 1, "nome": "Pizza Meio-a-Meio", "foto": "...", "descricao": "...", "valor": 0, "eh_novidade": true }] }` |
+| API-02 | Listar tamanhos disponíveis | `/tamanhos` | `GET` | Nenhum | `200` | `[{ "id": 1, "descricao": "Pequena - 4 fatias", "valor": 30 }, { "id": 2, "descricao": "Media - 6 fatias", "valor": 40 }]` |
+| API-03 | Listar opcionais do pedido | `/opcionais` | `GET` | Nenhum | `200` | `{ "sabores": [{ "id": 1, "nome": "Calabresa Artesanal", "valor": 0 }], "bordas": [{ "id": 1, "nome": "Borda de Catupiry", "valor": 8 }], "bebidas": [{ "id": 1, "nome": "Refrigerante Cola 2L", "valor": 12 }] }` |
+| API-04 | Listar status da fila | `/status_pedido` | `GET` | Nenhum | `200` | `[{ "id": 1, "descricao": "Pedido recebido" }, { "id": 2, "descricao": "Em preparo" }, { "id": 5, "descricao": "Pedido pendente" }]` |
+| API-05 | Verificar se e-mail já existe | `/usuarios?email=marina%40teste.com` | `GET` | `email` via query string | `200` | `[{ "id": 2, "nome": "Marina Souza", "email": "marina@teste.com", "tipo": "usuario" }]` ou `[]` quando não existe |
+| API-06 | Criar usuário com sucesso | `/usuarios` | `POST` | `{ "nome": "Ana", "email": "ana@teste.com", "senha": "123456", "tipo": "usuario", "criadoEm": "2026-10-31T12:00:00.000Z" }` | `201` | `{ "id": 4, "nome": "Ana", "email": "ana@teste.com", "senha": "123456", "tipo": "usuario", "criadoEm": "2026-10-31T12:00:00.000Z" }` |
+| API-07 | Listar todos os pedidos | `/pedidos` | `GET` | Nenhum | `200` | `[{ "id": 1, "usuarioId": 2, "nome": "Marina", "pizza": { "id": 1, "nome": "Pizza Meio-a-Meio" }, "tamanho": { "id": 2, "descricao": "Media - 6 fatias", "valor": 40 }, "statusId": 5, "total": 42, "dataPedido": "..." }]` |
+| API-08 | Listar pedidos do usuário | `/pedidos?usuarioId=2` | `GET` | `usuarioId` via query string | `200` | `[{ "id": 1, "usuarioId": 2, "nome": "Marina", "statusId": 5, "total": 42 }]` |
+| API-09 | Buscar pedido por ID | `/pedidos/1` | `GET` | `id` na rota | `200` | `{ "id": 1, "usuarioId": 2, "nome": "Marina", "pizza": { "id": 1, "nome": "Pizza Meio-a-Meio" }, "tamanho": { "id": 2, "descricao": "Media - 6 fatias", "valor": 40 }, "statusId": 5, "total": 42 }` |
+| API-10 | Criar pedido com sucesso | `/pedidos` | `POST` | `{ "usuarioId": 2, "nome": "Marina", "pizza": { "id": 1, "nome": "Pizza Meio-a-Meio" }, "tamanho": { "id": 2, "descricao": "Media - 6 fatias", "valor": 40 }, "statusId": 5, "taxaEntrega": 8, "total": 48, "observacao": "Sem cebola", "dataPedido": "2026-10-31T12:00:00.000Z", "atualizadoEm": "2026-10-31T12:00:00.000Z" }` | `201` | `{ "id": 15, "usuarioId": 2, "nome": "Marina", "pizza": { "id": 1, "nome": "Pizza Meio-a-Meio" }, "tamanho": { "id": 2, "descricao": "Media - 6 fatias", "valor": 40 }, "statusId": 5, "taxaEntrega": 8, "total": 48, "observacao": "Sem cebola", "dataPedido": "2026-10-31T12:00:00.000Z", "atualizadoEm": "2026-10-31T12:00:00.000Z" }` |
+| API-11 | Atualizar status do pedido | `/pedidos/1` | `PATCH` | `{ "statusId": 2, "atualizadoEm": "2026-10-31T12:05:00.000Z" }` | `200` | `{ "id": 1, "usuarioId": 2, "nome": "Marina", "statusId": 2, "atualizadoEm": "2026-10-31T12:05:00.000Z" }` |
+| API-12 | Excluir pedido | `/pedidos/1` | `DELETE` | Nenhum body | `200` | `{}` |
+
+### Fluxos de erro
+
+| ID | Cenário | Endpoint | Método | Dados enviados | Status esperado | Resposta esperada |
+|---|---|---|---|---|---|---|
+| API-13 | Pedido sem nome | `/pedidos` | `POST` | `{ "pizza": { "id": 1 }, "tamanho": { "id": 2 }, "statusId": 5 }` | `400` | `{ "erro": "Nome do cliente é obrigatório." }` |
+| API-14 | Pedido sem tamanho | `/pedidos` | `POST` | `{ "nome": "Marina", "pizza": { "id": 1 }, "statusId": 5 }` | `400` | `{ "erro": "Tamanho da pizza é obrigatório." }` |
+| API-15 | Usuário sem e-mail ou senha | `/usuarios` | `POST` | `{ "nome": "Ana" }` | `400` | `{ "erro": "E-mail e senha são obrigatórios." }` |
+| API-16 | Usuário com e-mail inválido | `/usuarios` | `POST` | `{ "nome": "Ana", "email": "ana", "senha": "123456" }` | `400` | `{ "erro": "E-mail inválido." }` |
+| API-17 | PATCH com body inválido | `/pedidos/1` | `PATCH` | `{}` ou `{ "statusId": "x" }` | `400` | `{ "erro": "Dados inválidos para atualização." }` |
+| API-18 | Pedido inexistente | `/pedidos/999` | `GET` | `id` na rota | `404` | `{ "erro": "Pedido não encontrado." }` |
+| API-19 | Falha interna simulada em teste | `/pedidos` ou qualquer rota | `POST`/`GET` | Header `X-Simulate-Error: true` com `NODE_ENV=test` | `500` | `{ "erro": "Erro interno do servidor" }` (sem stack trace) |
+
+### Observações de implementação
+
+- A API retorna `400` quando o nome do cliente ou o tamanho da pizza não são informados, conforme os cenários `API-13` e `API-14`.
+- A API retorna `404` quando o pedido solicitado não existe, como no cenário `API-18`.
+- A API retorna `500` apenas quando a falha interna é simulada com o header `X-Simulate-Error: true` em conjunto com `NODE_ENV=test`, como ocorre no cenário controlado do `npm test`.
+- Esse cenário não é acionado em produção ou no Docker local, porque a variável de ambiente não é definida como `test`.
+- As respostas de erro mantêm o formato padronizado e não expõem stack trace ao cliente.
+
+## Sobre o Projeto
+
+### Objetivo da solução
+O projeto é uma solução web para gestão de pedidos de pizzaria, com foco em oferecer uma experiência de compra e acompanhamento de pedidos em tempo real. A interface em Vue 3 consulta e atualiza um banco de dados REST simulado em JSON Server, mantendo as operações de menu, cadastro, login, pedidos e acompanhamento em um fluxo de uso simples e direto.
+
+### Escopo
+O sistema atual cobre:
+- consulta do cardápio e tipos de pizza;
+- cadastro e autenticação de usuários;
+- criação, listagem, atualização e remoção de pedidos;
+- painel administrativo para acompanhamento do status dos pedidos;
+- validação client-side antes do envio de pedido e cadastro.
+
+O sistema não pretende ser um backend completo de produção com autenticação em JWT, banco relacional, filas de processamento ou observabilidade avançada. O escopo principal é demonstrar o fluxo do negócio de pizzaria em uma aplicação front-end conectada a uma API de mock/rest.
+
+### Tipos de teste aplicados
+- Teste de API/integração com Jest + Supertest: validam status HTTP e corpo das respostas dos endpoints da API em um banco temporário, sem alterar o banco real do projeto.
+- Validação client-side: confirma campos obrigatórios e blocos de navegação no front-end antes do envio.
+- Build de front-end: `npm run build` garante que o Vue compila corretamente.
+
+### Pipeline de entrega
+
+```mermaid
+flowchart LR
+    A[Push na main] --> B[testes]
+    B --> C[build do frontend]
+    C --> D[login Docker Hub]
+    D --> E[publicação da imagem]
+```
+
+## Como executar os testes
+
+```bash
+npm install
+npm test
+```
+
+A suíte de testes usa `Jest + Supertest` para validar status e corpo das respostas da API em um banco temporário copiado de `db/db.json`, sem alterar o banco real do projeto.
+
+## Docker Hub
+
+A imagem publicada no workflow do CI usa o nome `la-farina`, conforme o arquivo `.github/workflows/ci.yml`.
+
+Para baixar a imagem publicada no Docker Hub, substitua `seuuser` pelo seu usuário real:
+
+```bash
+docker pull seuuser/la-farina:latest
+```
+
+Link da imagem no Docker Hub:
+
+https://hub.docker.com/r/seuuser/la-farina
+
+Para executar a imagem localmente:
+
+```bash
+docker run -d -p 8080:80 --name la-farina seuuser/la-farina:latest
+```
+
+A aplicação ficará disponível em `http://localhost:8080`.
 
 ## Autoria e Contribuição
 Desenvolvido por Maria Clara Bertin Vieira Ferreira, Marco Antonio de Melo Peixoto, Heber Americo Macedo, Thaynara Lima Soares Sousa.

@@ -5,8 +5,9 @@
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
-    "bancojson": "json-server --watch db/db.json",
-    "start": "json-server --watch db/db.json --host 0.0.0.0 --port $PORT"
+    "bancojson": "node server/server.js",
+    "start": "node server/server.js",
+    "test": "NODE_ENV=test jest --runInBand"
   },
   "dependencies": {
     "core-js": "^3.8.3",
@@ -17,6 +18,8 @@
   "devDependencies": {
     "@vue/cli-plugin-babel": "~5.0.0",
     "@vue/cli-plugin-router": "~5.0.0",
-    "@vue/cli-service": "~5.0.0"
+    "@vue/cli-service": "~5.0.0",
+    "jest": "^30.5.2",
+    "supertest": "^7.3.1"
   }
 }

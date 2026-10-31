@@ -1,0 +1,150 @@
+{
+  "info": {
+    "name": "La-Farina API Demo",
+    "description": "Coleção de exemplos para demonstrar cenários 200, 201, 400 e 404 da API La Farina.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "200 - GET /menu",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/menu",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["menu"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "200 - GET /pedidos/1",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/pedidos/1",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["pedidos", "1"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "201 - POST /usuarios",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nome\": \"Ana\",\n  \"email\": \"ana@teste.com\",\n  \"senha\": \"123456\",\n  \"tipo\": \"usuario\",\n  \"criadoEm\": \"2026-10-31T12:00:00.000Z\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/usuarios",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["usuarios"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "201 - POST /pedidos",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"usuarioId\": 2,\n  \"nome\": \"Marina\",\n  \"pizza\": {\n    \"id\": 1,\n    \"nome\": \"Pizza Meio-a-Meio\"\n  },\n  \"tamanho\": {\n    \"id\": 2,\n    \"descricao\": \"Media - 6 fatias\",\n    \"valor\": 40\n  },\n  \"borda\": {\n    \"id\": 1,\n    \"nome\": \"Borda de Catupiry\",\n    \"valor\": 8\n  },\n  \"bebidas\": [{\n    \"id\": 1,\n    \"nome\": \"Refrigerante Cola 2L\",\n    \"valor\": 12\n  }],\n  \"statusId\": 5,\n  \"taxaEntrega\": 8,\n  \"total\": 60,\n  \"observacao\": \"Sem cebola\",\n  \"dataPedido\": \"2026-10-31T12:00:00.000Z\",\n  \"atualizadoEm\": \"2026-10-31T12:00:00.000Z\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/pedidos",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["pedidos"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "400 - POST /pedidos sem nome",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"pizza\": {\"id\": 1},\n  \"tamanho\": {\"id\": 2},\n  \"statusId\": 5\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/pedidos",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["pedidos"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "400 - POST /usuarios sem email/senha",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nome\": \"Ana\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/usuarios",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["usuarios"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "404 - GET /pedidos/99999",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/pedidos/99999",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["pedidos", "99999"]
+        }
+      },
+      "response": []
+    }
+  ]
+}

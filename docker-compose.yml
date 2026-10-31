@@ -3,10 +3,13 @@ services:
     build:
       context: .
       target: api
+    command: ["node", "server/server.js"]
     ports:
       - "3000:3000"
+    environment:
+      PORT: 3000
+      HOST: 0.0.0.0
     volumes:
-      # Mantém os dados (pedidos, cadastros) entre reinícios do container
       - db-data:/app/db
     restart: unless-stopped
 
@@ -15,7 +18,6 @@ services:
       context: .
       target: production
       args:
-        # O navegador acessa a API pela porta publicada no host
         VUE_APP_API_BASE_URL: http://localhost:3000
         VUE_APP_PUBLIC_PATH: /
     ports:
