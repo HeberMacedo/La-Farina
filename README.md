@@ -175,20 +175,20 @@ A suíte de testes usa `Jest + Supertest` para validar status e corpo das respos
 
 A imagem publicada no workflow do CI usa o nome `la-farina`, conforme o arquivo `.github/workflows/ci.yml`.
 
-Para baixar a imagem publicada no Docker Hub, substitua `seuuser` pelo seu usuário real:
+Para baixar a imagem publicada no Docker Hub:
 
 ```bash
-docker pull seuuser/la-farina:latest
+docker pull pxmarco/la-farina:latest
 ```
 
 Link da imagem no Docker Hub:
 
-https://hub.docker.com/r/seuuser/la-farina
+https://hub.docker.com/r/pxmarco/la-farina
 
 Para executar a imagem localmente:
 
 ```bash
-docker run -d -p 8080:80 --name la-farina seuuser/la-farina:latest
+docker run -d -p 8080:80 --name la-farina pxmarco/la-farina:latest
 ```
 
 A aplicação ficará disponível em `http://localhost:8080`.
