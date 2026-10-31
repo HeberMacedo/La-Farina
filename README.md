@@ -53,6 +53,36 @@ docker compose down -v
 └── package.json           # Dependências e scripts de automação do projeto
 ```
 
+## Sobre o Projeto
+
+### Objetivo da solução
+O projeto é uma solução web para gestão de pedidos de pizzaria, com foco em oferecer uma experiência de compra e acompanhamento de pedidos em tempo real. A interface em Vue 3 consulta e atualiza um banco de dados REST simulado em JSON Server, mantendo as operações de menu, cadastro, login, pedidos e acompanhamento em um fluxo de uso simples e direto.
+
+### Escopo
+O sistema atual cobre:
+- consulta do cardápio e tipos de pizza;
+- cadastro e autenticação de usuários;
+- criação, listagem, atualização e remoção de pedidos;
+- painel administrativo para acompanhamento do status dos pedidos;
+- validação client-side antes do envio de pedido e cadastro.
+
+O sistema não pretende ser um backend completo de produção com autenticação em JWT, banco relacional, filas de processamento ou observabilidade avançada. O escopo principal é demonstrar o fluxo do negócio de pizzaria em uma aplicação front-end conectada a uma API de mock/rest.
+
+### Tipos de teste aplicados
+- Teste de API/integração com Jest + Supertest: validam status HTTP e corpo das respostas dos endpoints da API em um banco temporário, sem alterar o banco real do projeto.
+- Validação client-side: confirma campos obrigatórios e blocos de navegação no front-end antes do envio.
+- Build de front-end: `npm run build` garante que o Vue compila corretamente.
+
+### Pipeline de entrega
+
+```mermaid
+flowchart LR
+    A[Push na main] --> B[testes]
+    B --> C[build do frontend]
+    C --> D[login Docker Hub]
+    D --> E[publicação da imagem]
+```
+
 ## Cenários para teste
 
 | Item | Descrição |
@@ -131,36 +161,6 @@ docker compose down -v
 - A API retorna `500` apenas quando a falha interna é simulada com o header `X-Simulate-Error: true` em conjunto com `NODE_ENV=test`, como ocorre no cenário controlado do `npm test`.
 - Esse cenário não é acionado em produção ou no Docker local, porque a variável de ambiente não é definida como `test`.
 - As respostas de erro mantêm o formato padronizado e não expõem stack trace ao cliente.
-
-## Sobre o Projeto
-
-### Objetivo da solução
-O projeto é uma solução web para gestão de pedidos de pizzaria, com foco em oferecer uma experiência de compra e acompanhamento de pedidos em tempo real. A interface em Vue 3 consulta e atualiza um banco de dados REST simulado em JSON Server, mantendo as operações de menu, cadastro, login, pedidos e acompanhamento em um fluxo de uso simples e direto.
-
-### Escopo
-O sistema atual cobre:
-- consulta do cardápio e tipos de pizza;
-- cadastro e autenticação de usuários;
-- criação, listagem, atualização e remoção de pedidos;
-- painel administrativo para acompanhamento do status dos pedidos;
-- validação client-side antes do envio de pedido e cadastro.
-
-O sistema não pretende ser um backend completo de produção com autenticação em JWT, banco relacional, filas de processamento ou observabilidade avançada. O escopo principal é demonstrar o fluxo do negócio de pizzaria em uma aplicação front-end conectada a uma API de mock/rest.
-
-### Tipos de teste aplicados
-- Teste de API/integração com Jest + Supertest: validam status HTTP e corpo das respostas dos endpoints da API em um banco temporário, sem alterar o banco real do projeto.
-- Validação client-side: confirma campos obrigatórios e blocos de navegação no front-end antes do envio.
-- Build de front-end: `npm run build` garante que o Vue compila corretamente.
-
-### Pipeline de entrega
-
-```mermaid
-flowchart LR
-    A[Push na main] --> B[testes]
-    B --> C[build do frontend]
-    C --> D[login Docker Hub]
-    D --> E[publicação da imagem]
-```
 
 ## Como executar os testes
 
