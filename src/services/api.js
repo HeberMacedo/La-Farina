@@ -26,7 +26,8 @@ async function request(endpoint, options = {}) {
 
   if (!response.ok) {
     throw new Error(
-      data?.message ||
+      data?.erro ||
+        data?.message ||
         data?.error ||
         `Erro ao acessar a API. Código: ${response.status}`
     );
