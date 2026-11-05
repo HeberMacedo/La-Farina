@@ -358,7 +358,7 @@
               Taxa de entrega
             </span>
 
-            <strong>
+            <strong v-if="taxaEntrega > 0">
               +
               {{
                 formatarMoeda(
@@ -366,7 +366,26 @@
                 )
               }}
             </strong>
+
+            <strong
+              v-else
+              class="frete-gratis"
+            >
+              Grátis
+            </strong>
           </div>
+
+          <p
+            v-if="taxaEntrega > 0"
+            class="aviso-frete"
+          >
+            Entrega grátis em pedidos acima de
+            {{ formatarMoeda(valorMinimoFreteGratis) }}.
+            <template v-if="subtotalPedido > 0">
+              Faltam
+              {{ formatarMoeda(valorFaltaFreteGratis) }}.
+            </template>
+          </p>
 
           <div class="resumo-total">
             <span>
@@ -431,7 +450,8 @@ import {
 } from "@/services/api";
 
 import {
-  TAXA_ENTREGA,
+  calcularTaxaEntrega,
+  VALOR_MINIMO_FRETE_GRATIS,
 } from "@/services/entrega";
 
 export default {
@@ -466,7 +486,8 @@ export default {
 
       listaBebidasSelecionadas: [],
 
-      taxaEntrega: TAXA_ENTREGA,
+      valorMinimoFreteGratis:
+        VALOR_MINIMO_FRETE_GRATIS,
 
       observacao: "",
 
@@ -508,7 +529,7 @@ export default {
       return `${process.env.BASE_URL}img/logo_tpizza.svg`;
     },
 
-    totalPedido() {
+    subtotalPedido() {
       let total = 0;
 
       total += Number(
@@ -536,11 +557,28 @@ export default {
             0
           );
 
-      total += Number(
-        this.taxaEntrega || 0
-      );
-
       return total;
+    },
+
+    taxaEntrega() {
+      return calcularTaxaEntrega(
+        this.subtotalPedido
+      );
+    },
+
+    valorFaltaFreteGratis() {
+      return Math.max(
+        VALOR_MINIMO_FRETE_GRATIS -
+          this.subtotalPedido,
+        0
+      );
+    },
+
+    totalPedido() {
+      return (
+        this.subtotalPedido +
+        this.taxaEntrega
+      );
     },
   },
 
@@ -1434,6 +1472,19 @@ textarea:focus {
   color: #44312a;
 
   text-align: right;
+}
+
+.resumo-linha strong.frete-gratis {
+  color: #2e7d32;
+}
+
+.aviso-frete {
+  margin:
+    8px 0 0;
+
+  font-size: 13px;
+
+  color: #887670;
 }
 
 .resumo-total {
