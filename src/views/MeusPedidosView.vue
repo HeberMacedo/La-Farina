@@ -116,105 +116,109 @@
 
           <!-- CONTEÚDO -->
           <div class="order-content">
-            <!-- PIZZA -->
-            <div
-              v-if="pedido.pizza"
-              class="pizza"
+            <!-- PIZZAS DO PEDIDO -->
+            <template
+              v-for="(item, index) in pizzasDoPedido(pedido)"
+              :key="`pedido-${pedido.id}-pizza-${index}`"
             >
-              <img
-                v-if="pedido.pizza.foto"
-                :src="pedido.pizza.foto"
-                :alt="pedido.pizza.nome"
-                @error="imagemErro"
-              />
+              <div
+                class="pizza"
+                :class="{ 'pizza-extra': index > 0 }"
+              >
+                <img
+                  v-if="item.pizza?.foto"
+                  :src="item.pizza.foto"
+                  :alt="item.pizza.nome"
+                  @error="imagemErro"
+                />
 
-              <div class="pizza-info">
-                <small>
-                  PIZZA
-                </small>
+                <div class="pizza-info">
+                  <small>
+                    PIZZA
+                    <template v-if="pizzasDoPedido(pedido).length > 1">
+                      {{ index + 1 }} DE
+                      {{ pizzasDoPedido(pedido).length }}
+                    </template>
+                  </small>
 
-                <h3>
-                  {{ pedido.pizza.nome }}
-                </h3>
+                  <h3>
+                    {{ item.pizza?.nome || "Pizza" }}
+                  </h3>
 
-                <p v-if="pedido.tamanho">
-                  {{ pedido.tamanho.descricao }}
-                </p>
+                  <p v-if="item.tamanho">
+                    {{ item.tamanho.descricao }}
+                  </p>
+                </div>
               </div>
-            </div>
 
-            <!-- DETALHES -->
+              <div class="details details-pizza">
+                <!-- TAMANHO -->
+                <div
+                  v-if="item.tamanho"
+                  class="detail"
+                >
+                  <div>
+                    <strong>
+                      Tamanho
+                    </strong>
+
+                    <span>
+                      {{ item.tamanho.descricao }}
+                    </span>
+                  </div>
+
+                  <span
+                    v-if="item.tamanho.valor"
+                    class="detail-value"
+                  >
+                    {{ formatarMoeda(item.tamanho.valor) }}
+                  </span>
+                </div>
+
+                <!-- SABORES -->
+                <div
+                  v-if="item.sabores?.length"
+                  class="detail"
+                >
+                  <div>
+                    <strong>
+                      {{ item.sabores.length > 1 ? "Sabores (meio a meio)" : "Sabor" }}
+                    </strong>
+
+                    <span>
+                      {{ descricaoSabores(item) }}
+                    </span>
+                  </div>
+                </div>
+
+                <!-- BORDA -->
+                <div class="detail">
+                  <div>
+                    <strong>
+                      Borda
+                    </strong>
+
+                    <span>
+                      {{
+                        item.borda
+                          ? item.borda.nome
+                          : "Sem borda recheada"
+                      }}
+                    </span>
+                  </div>
+
+                  <span
+                    v-if="item.borda?.valor"
+                    class="detail-value"
+                  >
+                    + {{ formatarMoeda(item.borda.valor) }}
+                  </span>
+                </div>
+              </div>
+            </template>
+
+            <!-- DETALHES DO PEDIDO -->
             <div class="details">
-              <!-- TAMANHO -->
-              <div
-                v-if="pedido.tamanho"
-                class="detail"
-              >
-                <div>
-                  <strong>
-                    Tamanho
-                  </strong>
-
-                  <span>
-                    {{ pedido.tamanho.descricao }}
-                  </span>
-                </div>
-
-                <span
-                  v-if="pedido.tamanho.valor"
-                  class="detail-value"
-                >
-                  {{ formatarMoeda(pedido.tamanho.valor) }}
-                </span>
-              </div>
-
-              <!-- SABORES -->
-              <div
-                v-if="
-                  pedido.sabores &&
-                  pedido.sabores.length
-                "
-                class="detail"
-              >
-                <div>
-                  <strong>
-                    Sabores
-                  </strong>
-
-                  <span>
-                    {{
-                      pedido.sabores
-                        .map((sabor) => sabor.nome)
-                        .join(", ")
-                    }}
-                  </span>
-                </div>
-              </div>
-
-              <!-- BORDA -->
-              <div class="detail">
-                <div>
-                  <strong>
-                    Borda
-                  </strong>
-
-                  <span>
-                    {{
-                      pedido.borda
-                        ? pedido.borda.nome
-                        : "Sem borda recheada"
-                    }}
-                  </span>
-                </div>
-
-                <span
-                  v-if="pedido.borda?.valor"
-                  class="detail-value"
-                >
-                  + {{ formatarMoeda(pedido.borda.valor) }}
-                </span>
-              </div>
-
               <!-- BEBIDAS -->
               <div
                 v-if="
@@ -373,6 +377,12 @@ import {
 import {
   obterUsuarioAtual,
 } from "@/services/auth";
+
+import {
+  descricaoSabores,
+  pizzasDoPedido,
+  subtotalPizzas,
+} from "@/services/itensPedido";
 
 export default {
   name: "MeusPedidosView",
@@ -561,6 +571,10 @@ export default {
       );
     },
 
+    pizzasDoPedido,
+
+    descricaoSabores,
+
     totalBebidas(pedido) {
       if (
         !pedido.bebidas ||
@@ -605,16 +619,8 @@ export default {
       */
 
       let total =
-        Number(
-          pedido.tamanho?.valor ||
-          pedido.pizza?.valor ||
-          0
-        );
-
-      total +=
-        Number(
-          pedido.borda?.valor ||
-          0
+        subtotalPizzas(
+          pizzasDoPedido(pedido)
         );
 
       total +=
@@ -1004,6 +1010,18 @@ export default {
 .details {
   border-top:
     1px solid #f0e9e6;
+}
+
+.details + .details {
+  border-top: 0;
+}
+
+.details-pizza {
+  margin-bottom: 4px;
+}
+
+.pizza-extra {
+  margin-top: 24px;
 }
 
 .detail {

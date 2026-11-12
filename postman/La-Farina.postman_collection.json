@@ -13,9 +13,13 @@
         "url": {
           "raw": "http://localhost:3000/menu",
           "protocol": "http",
-          "host": ["localhost"],
+          "host": [
+            "localhost"
+          ],
           "port": "3000",
-          "path": ["menu"]
+          "path": [
+            "menu"
+          ]
         }
       },
       "response": []
@@ -28,9 +32,14 @@
         "url": {
           "raw": "http://localhost:3000/pedidos/1",
           "protocol": "http",
-          "host": ["localhost"],
+          "host": [
+            "localhost"
+          ],
           "port": "3000",
-          "path": ["pedidos", "1"]
+          "path": [
+            "pedidos",
+            "1"
+          ]
         }
       },
       "response": []
@@ -52,9 +61,13 @@
         "url": {
           "raw": "http://localhost:3000/usuarios",
           "protocol": "http",
-          "host": ["localhost"],
+          "host": [
+            "localhost"
+          ],
           "port": "3000",
-          "path": ["usuarios"]
+          "path": [
+            "usuarios"
+          ]
         }
       },
       "response": []
@@ -76,9 +89,69 @@
         "url": {
           "raw": "http://localhost:3000/pedidos",
           "protocol": "http",
-          "host": ["localhost"],
+          "host": [
+            "localhost"
+          ],
           "port": "3000",
-          "path": ["pedidos"]
+          "path": [
+            "pedidos"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "201 - POST /pedidos com várias pizzas (meio a meio)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"usuarioId\": 2,\n  \"nome\": \"Marina\",\n  \"pizzas\": [\n    {\n      \"pizza\": {\n        \"id\": 1,\n        \"nome\": \"Pizza Meio-a-Meio\"\n      },\n      \"tamanho\": {\n        \"id\": 3,\n        \"descricao\": \"Grande - 8 fatias\",\n        \"valor\": 50\n      },\n      \"sabores\": [\n        {\n          \"id\": 1,\n          \"nome\": \"Calabresa Artesanal\"\n        },\n        {\n          \"id\": 2,\n          \"nome\": \"Quatro Queijos\"\n        }\n      ],\n      \"borda\": {\n        \"id\": 1,\n        \"nome\": \"Borda de Catupiry\",\n        \"valor\": 8\n      },\n      \"valor\": 58\n    },\n    {\n      \"pizza\": {\n        \"id\": 4,\n        \"nome\": \"Frango Catupiry\"\n      },\n      \"tamanho\": {\n        \"id\": 2,\n        \"descricao\": \"Media - 6 fatias\",\n        \"valor\": 40\n      },\n      \"sabores\": [\n        {\n          \"id\": 3,\n          \"nome\": \"Frango com Catupiry\"\n        }\n      ],\n      \"borda\": null,\n      \"valor\": 40\n    }\n  ],\n  \"bebidas\": [],\n  \"statusId\": 5,\n  \"taxaEntrega\": 0,\n  \"total\": 98,\n  \"observacao\": \"\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/pedidos",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "pedidos"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "400 - POST /pedidos com 3 sabores na mesma pizza",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nome\": \"Marina\",\n  \"pizzas\": [\n    {\n      \"tamanho\": {\n        \"id\": 2\n      },\n      \"sabores\": [\n        {\n          \"id\": 1\n        },\n        {\n          \"id\": 2\n        },\n        {\n          \"id\": 3\n        }\n      ]\n    }\n  ]\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/pedidos",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "pedidos"
+          ]
         }
       },
       "response": []
@@ -100,9 +173,13 @@
         "url": {
           "raw": "http://localhost:3000/pedidos",
           "protocol": "http",
-          "host": ["localhost"],
+          "host": [
+            "localhost"
+          ],
           "port": "3000",
-          "path": ["pedidos"]
+          "path": [
+            "pedidos"
+          ]
         }
       },
       "response": []
@@ -124,9 +201,13 @@
         "url": {
           "raw": "http://localhost:3000/usuarios",
           "protocol": "http",
-          "host": ["localhost"],
+          "host": [
+            "localhost"
+          ],
           "port": "3000",
-          "path": ["usuarios"]
+          "path": [
+            "usuarios"
+          ]
         }
       },
       "response": []
@@ -139,9 +220,14 @@
         "url": {
           "raw": "http://localhost:3000/pedidos/99999",
           "protocol": "http",
-          "host": ["localhost"],
+          "host": [
+            "localhost"
+          ],
           "port": "3000",
-          "path": ["pedidos", "99999"]
+          "path": [
+            "pedidos",
+            "99999"
+          ]
         }
       },
       "response": []

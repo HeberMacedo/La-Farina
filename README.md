@@ -73,6 +73,8 @@ O sistema atual cobre:
 - consulta do cardápio e tipos de pizza;
 - cadastro e autenticação de usuários;
 - criação, listagem, atualização e remoção de pedidos;
+- pedidos com várias pizzas, cada uma com tamanho, 1 ou 2 sabores (meio a meio) e borda;
+- entrega grátis quando o subtotal passa de R$ 80,00;
 - painel administrativo para acompanhamento do status dos pedidos;
 - validação client-side antes do envio de pedido e cadastro.
 
@@ -101,11 +103,11 @@ flowchart LR
 | **Finalidade** | Permitir que o cliente escolha um item do cardápio, personalize o pedido e envie a solicitação para o sistema de produção. |
 | **Atores** | Cliente, Sistema |
 | **Pré-condições** | O cliente acessou a tela de menu e a API da pizzaria está disponível. |
-| **Fluxo Principal** | 1- **Sistema** carrega o menu com as opções de pizzas disponíveis. <br> 2- **Cliente** seleciona a pizza, tamanho, borda e acompanhamentos desejados. <br> 3- **Cliente** preenche os dados obrigatórios, como nome e informações do pedido. <br> 4- **Sistema** valida os campos e confirma que os dados estão completos. <br> 5- **Cliente** envia o pedido. <br> 6- **Sistema** registra a solicitação e a exibe no painel de monitoramento. |
+| **Fluxo Principal** | 1- **Sistema** carrega o menu com as opções de pizzas disponíveis. <br> 2- **Cliente** seleciona a pizza, tamanho, 1 ou 2 sabores (meio a meio), borda e acompanhamentos desejados, podendo adicionar outras pizzas ao mesmo pedido. <br> 3- **Cliente** preenche os dados obrigatórios, como nome e informações do pedido. <br> 4- **Sistema** valida os campos e confirma que os dados estão completos. <br> 5- **Cliente** envia o pedido. <br> 6- **Sistema** registra a solicitação e a exibe no painel de monitoramento. |
 | **Fluxos Alternativos** | FA1 - Campos obrigatórios vazios [Passo 4 do Fluxo Principal]. <br> 1- **Sistema** exibe mensagem de alerta destacando os campos faltantes. <br> 2- **Sistema** mantém a tela aberta para correção. <br> FA2 - API indisponível [Passo 5 do Fluxo Principal]. <br> 1- **Sistema** exibe mensagem de erro técnico. <br> 2- **Sistema** informa que o pedido não foi enviado no momento. <br> FA3 - Item indisponível [Passo 2 do Fluxo Principal]. <br> 1- **Sistema** informa que a opção selecionada não está disponível no momento. <br> 2- **Cliente** deve escolher outra opção. |
 | **Pós-condições** | Pedido registrado com sucesso no sistema e disponível para acompanhamento. |
-| **Regras de negócio** | O nome do cliente é obrigatório. O tamanho da pizza deve ser informado. O sistema não deve permitir envio com campos críticos vazios. A escolha de borda e acompanhamento é opcional, mas deve seguir a regra de customização do cardápio. |
-| **Dados Manipulados** | Nome do cliente, sabor da pizza, tamanho, borda recheada, acompanhamento, observações adicionais, status do pedido e valor total. |
+| **Regras de negócio** | O nome do cliente é obrigatório. O pedido precisa de ao menos uma pizza, e cada pizza deve ter tamanho e de 1 a 2 sabores. O sistema não deve permitir envio com campos críticos vazios. A escolha de borda e acompanhamento é opcional, mas deve seguir a regra de customização do cardápio. |
+| **Dados Manipulados** | Nome do cliente, lista de pizzas (pizza, tamanho, sabores e borda de cada uma), acompanhamento, observações adicionais, status do pedido e valor total. |
 
 | Item | Descrição |
 |---|---|
@@ -162,6 +164,9 @@ flowchart LR
 | API-16 | Usuário com e-mail inválido | `/usuarios` | `POST` | `{ "nome": "Ana", "email": "ana", "senha": "123456" }` | `400` | `{ "erro": "E-mail inválido." }` |
 | API-17 | PATCH com body inválido | `/pedidos/1` | `PATCH` | `{}` ou `{ "statusId": "x" }` | `400` | `{ "erro": "Dados inválidos para atualização." }` |
 | API-18 | Pedido inexistente | `/pedidos/999` | `GET` | `id` na rota | `404` | `{ "erro": "Pedido não encontrado." }` |
+| API-20 | Pedido com lista de pizzas vazia | `/pedidos` | `POST` | `{ "nome": "Marina", "pizzas": [] }` | `400` | `{ "erro": "Adicione ao menos uma pizza ao pedido." }` |
+| API-21 | Pizza sem tamanho dentro da lista | `/pedidos` | `POST` | `{ "nome": "Marina", "pizzas": [{ "sabores": [{ "id": 1 }] }] }` | `400` | `{ "erro": "Tamanho da pizza é obrigatório." }` |
+| API-22 | Pizza com mais de 2 sabores | `/pedidos` | `POST` | `{ "nome": "Marina", "pizzas": [{ "tamanho": { "id": 2 }, "sabores": [{ "id": 1 }, { "id": 2 }, { "id": 3 }] }] }` | `400` | `{ "erro": "Cada pizza pode ter no máximo 2 sabores." }` |
 | API-19 | Falha interna simulada em teste | `/pedidos` ou qualquer rota | `POST`/`GET` | Header `X-Simulate-Error: true` com `NODE_ENV=test` | `500` | `{ "erro": "Erro interno do servidor" }` (sem stack trace) |
 
 ### Observações de implementação

@@ -82,30 +82,56 @@
       "id": 1,
       "usuarioId": 2,
       "nome": "Marina Souza",
-      "tamanho": {
-        "id": 3,
-        "descricao": "Grande - 8 fatias",
-        "valor": 50
-      },
-      "sabores": [
+      "pizzas": [
         {
-          "id": 1,
-          "nome": "Calabresa Artesanal",
-          "descricao": "Calabresa fatiada, cebola roxa, mussarela e oregano.",
-          "valor": 0
+          "pizza": {
+            "id": 1,
+            "nome": "Pizza Meio-a-Meio",
+            "foto": "https://images.unsplash.com/photo-1594007654729-407eedc4be65?auto=format&fit=crop&w=900&q=80"
+          },
+          "tamanho": {
+            "id": 3,
+            "descricao": "Grande - 8 fatias",
+            "valor": 50
+          },
+          "sabores": [
+            {
+              "id": 1,
+              "nome": "Calabresa Artesanal"
+            },
+            {
+              "id": 2,
+              "nome": "Quatro Queijos"
+            }
+          ],
+          "borda": {
+            "id": 1,
+            "nome": "Borda de Catupiry",
+            "valor": 8
+          },
+          "valor": 58
         },
         {
-          "id": 2,
-          "nome": "Quatro Queijos",
-          "descricao": "Mussarela, parmesao, provolone e catupiry.",
-          "valor": 0
+          "pizza": {
+            "id": 4,
+            "nome": "Frango Catupiry",
+            "foto": "https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=900&q=80"
+          },
+          "tamanho": {
+            "id": 2,
+            "descricao": "Media - 6 fatias",
+            "valor": 40
+          },
+          "sabores": [
+            {
+              "id": 3,
+              "nome": "Frango com Catupiry"
+            }
+          ],
+          "borda": null,
+          "valor": 40
         }
       ],
-      "borda": {
-        "id": 1,
-        "nome": "Borda de Catupiry",
-        "valor": 8
-      },
       "bebidas": [
         {
           "id": 1,
@@ -113,16 +139,9 @@
           "valor": 12
         }
       ],
-      "pizza": {
-        "id": 1,
-        "nome": "Pizza Meio-a-Meio",
-        "foto": "https://images.unsplash.com/photo-1594007654729-407eedc4be65?auto=format&fit=crop&w=900&q=80",
-        "descricao": "Monte uma pizza com ate dois sabores da casa e escolha o tamanho ideal.",
-        "valor": 0,
-        "eh_novidade": true
-      },
       "statusId": 5,
-      "total": 70,
+      "taxaEntrega": 0,
+      "total": 110,
       "observacao": "",
       "dataPedido": "2026-09-15T17:00:00-03:00",
       "atualizadoEm": "2026-09-15T17:00:00-03:00"
@@ -221,6 +240,7 @@
         "foto": "https://images.unsplash.com/photo-1628840042765-356cda07504e?auto=format&fit=crop&w=900&q=80",
         "descricao": "Calabresa artesanal, cebola roxa, mussarela especial e oregano.",
         "valor": 0,
+        "saborId": 1,
         "eh_novidade": false
       },
       {
@@ -229,6 +249,7 @@
         "foto": "https://images.unsplash.com/photo-1548369937-47519962c11a?auto=format&fit=crop&w=900&q=80",
         "descricao": "Mussarela, parmesao, provolone e catupiry sobre molho de tomate da casa.",
         "valor": 0,
+        "saborId": 2,
         "eh_novidade": true
       },
       {
@@ -237,6 +258,7 @@
         "foto": "https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=900&q=80",
         "descricao": "Frango temperado, catupiry, milho verde e mussarela gratinada.",
         "valor": 0,
+        "saborId": 3,
         "eh_novidade": false
       }
     ]

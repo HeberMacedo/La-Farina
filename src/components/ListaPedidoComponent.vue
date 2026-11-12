@@ -20,20 +20,30 @@
       >
         <div class="pedido-id">{{ pedido.id }}</div>
         <div class="pedido-cliente">{{ pedido.nome }}</div>
-        <div>{{ pedido.pizza?.nome || "-" }}</div>
-        <div>{{ pedido.tamanho?.descricao || "-" }}</div>
+        <div>
+          <div v-for="(item, index) in pizzasDoPedido(pedido)" :key="index">
+            {{ item.pizza?.nome || "-" }}
+          </div>
+        </div>
+        <div>
+          <div v-for="(item, index) in pizzasDoPedido(pedido)" :key="index">
+            {{ item.tamanho?.descricao || "-" }}
+          </div>
+        </div>
         <div class="pedido-itens">
           <p class="grupo-titulo">Sabores</p>
           <div class="etiquetas">
-            <span v-for="(sabor, index) in pedido.sabores" :key="index">
-              {{ sabor.nome }}
+            <span v-for="(item, index) in pizzasDoPedido(pedido)" :key="index">
+              <template v-if="pizzasDoPedido(pedido).length > 1">{{ index + 1 }}: </template>{{ descricaoSabores(item) }}
             </span>
           </div>
 
-          <div v-if="pedido.borda">
+          <div v-if="bordasDoPedido(pedido).length">
             <p class="grupo-titulo">Borda</p>
             <div class="etiquetas">
-              <span>{{ pedido.borda.nome }}</span>
+              <span v-for="(borda, index) in bordasDoPedido(pedido)" :key="index">
+                {{ borda }}
+              </span>
             </div>
           </div>
 
@@ -76,6 +86,11 @@
 <script>
 import AlertaComponentVue from "@/components/AlertaComponent.vue";
 
+import {
+  descricaoSabores,
+  pizzasDoPedido,
+} from "@/services/itensPedido";
+
 export default {
   name: "ListaPedidoComponent",
   components: {
@@ -92,6 +107,16 @@ export default {
     };
   },
   methods: {
+    pizzasDoPedido,
+
+    descricaoSabores,
+
+    bordasDoPedido(pedido) {
+      return pizzasDoPedido(pedido)
+        .map((item) => item.borda?.nome)
+        .filter(Boolean);
+    },
+
     exibirAlerta(tipo, mensagem) {
       this.alerta = { tipo, mensagem };
     },

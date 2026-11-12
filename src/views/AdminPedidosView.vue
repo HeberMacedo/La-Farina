@@ -107,50 +107,46 @@
           </div>
 
           <div class="content">
-            <div
-              v-if="pedido.pizza"
-              class="pizza"
-            >
-              <img
-                v-if="pedido.pizza.foto"
-                :src="pedido.pizza.foto"
-                :alt="pedido.pizza.nome"
-              />
+            <div class="pizzas-lista">
+              <div
+                v-for="(item, index) in pizzasDoPedido(pedido)"
+                :key="`pedido-${pedido.id}-pizza-${index}`"
+                class="pizza"
+              >
+                <img
+                  v-if="item.pizza?.foto"
+                  :src="item.pizza.foto"
+                  :alt="item.pizza.nome"
+                />
 
-              <div>
-                <h3>
-                  {{ pedido.pizza.nome }}
-                </h3>
+                <div>
+                  <h3>
+                    <span
+                      v-if="pizzasDoPedido(pedido).length > 1"
+                      class="pizza-numero"
+                    >
+                      {{ index + 1 }}.
+                    </span>
+                    {{ item.pizza?.nome || "Pizza" }}
+                  </h3>
 
-                <p v-if="pedido.tamanho">
-                  {{ pedido.tamanho.descricao }}
-                </p>
+                  <p>
+                    {{ item.tamanho?.descricao || "Tamanho não informado" }}
+                    ·
+                    {{ descricaoSabores(item) }}
+                    ·
+                    {{ item.borda?.nome || "Sem borda" }}
+                  </p>
+                </div>
               </div>
             </div>
 
             <div class="info-grid">
               <div>
-                <small>Sabores</small>
+                <small>Pizzas</small>
 
                 <strong>
-                  {{
-                    pedido.sabores?.length
-                      ? pedido.sabores
-                          .map((s) => s.nome)
-                          .join(", ")
-                      : "Não informado"
-                  }}
-                </strong>
-              </div>
-
-              <div>
-                <small>Borda</small>
-
-                <strong>
-                  {{
-                    pedido.borda?.nome ||
-                    "Sem borda"
-                  }}
+                  {{ pizzasDoPedido(pedido).length }}
                 </strong>
               </div>
 
@@ -267,6 +263,13 @@ import {
   atualizarPedido,
   excluirPedido,
 } from "@/services/pedidos";
+
+import {
+  descricaoSabores,
+  pizzasDoPedido,
+  subtotalPizzas,
+  totalBebidas,
+} from "@/services/itensPedido";
 
 export default {
   name: "AdminPedidosView",
@@ -473,6 +476,10 @@ export default {
       return "pending";
     },
 
+    pizzasDoPedido,
+
+    descricaoSabores,
+
     totalPedido(pedido) {
       if (
         pedido.total !== undefined &&
@@ -481,30 +488,13 @@ export default {
         return Number(pedido.total);
       }
 
-      let total = Number(
-        pedido.tamanho?.valor ||
-        pedido.pizza?.valor ||
-        0
+      return (
+        subtotalPizzas(
+          pizzasDoPedido(pedido)
+        ) +
+        totalBebidas(pedido.bebidas) +
+        Number(pedido.taxaEntrega || 0)
       );
-
-      total += Number(
-        pedido.borda?.valor || 0
-      );
-
-      if (pedido.bebidas) {
-        total += pedido.bebidas.reduce(
-          (soma, bebida) =>
-            soma +
-            Number(bebida.valor || 0),
-          0
-        );
-      }
-
-      total += Number(
-        pedido.taxaEntrega || 0
-      );
-
-      return total;
     },
 
     formatarMoeda(valor) {
@@ -718,11 +708,21 @@ export default {
   padding: 24px;
 }
 
-.pizza {
+.pizzas-lista {
   margin-bottom: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.pizza {
   display: flex;
   align-items: center;
   gap: 15px;
+}
+
+.pizza-numero {
+  color: #db4826;
 }
 
 .pizza img {
@@ -745,7 +745,7 @@ export default {
 .info-grid {
   display: grid;
   grid-template-columns:
-    repeat(4, 1fr);
+    repeat(3, 1fr);
   gap: 15px;
 }
 

@@ -14,7 +14,7 @@
         <img
           id="foto-content"
           :src="fotoAtual"
-          :alt="pizza?.nome || 'Pizza La Farina'"
+          :alt="pizzaAtual?.nome || 'Pizza La Farina'"
           @error="tratarErroImagem"
         />
 
@@ -25,14 +25,14 @@
 
           <h1>
             {{
-              pizza?.nome ||
+              pizzaAtual?.nome ||
               "Pizza selecionada"
             }}
           </h1>
 
           <p>
             {{
-              pizza?.descricao ||
+              pizzaAtual?.descricao ||
               ""
             }}
           </p>
@@ -50,9 +50,10 @@
           </h2>
 
           <p>
-            Escolha o tamanho, a borda,
-            as bebidas e adicione uma
-            observação se desejar.
+            Monte cada pizza com tamanho,
+            até 2 sabores e borda. Você pode
+            colocar várias pizzas no mesmo
+            pedido.
           </p>
         </div>
 
@@ -70,24 +71,85 @@
           />
         </div>
 
-        <!-- PIZZA -->
-        <div class="pizza-selected">
-          <div>
+        <!-- PIZZAS JÁ ADICIONADAS -->
+        <div
+          v-if="pizzasPedido.length"
+          class="pizzas-adicionadas"
+        >
+          <small>
+            PIZZAS NO PEDIDO
+            ({{ pizzasPedido.length }})
+          </small>
+
+          <div
+            v-for="(item, index) in pizzasPedido"
+            :key="`pizza-${index}`"
+            class="pizza-adicionada"
+          >
+            <div>
+              <strong>
+                {{ index + 1 }}.
+                {{ item.pizza?.nome }}
+                ·
+                {{ item.tamanho.descricao }}
+              </strong>
+
+              <span>
+                {{ descricaoSabores(item) }}
+                <template v-if="item.borda">
+                  · {{ item.borda.nome }}
+                </template>
+              </span>
+            </div>
+
+            <div class="pizza-adicionada-acoes">
+              <strong>
+                {{ formatarMoeda(item.valor) }}
+              </strong>
+
+              <button
+                type="button"
+                class="remover-pizza"
+                @click="removerPizza(index)"
+              >
+                Remover
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- MONTAGEM DA PIZZA -->
+        <div class="montagem">
+          <div class="montagem-titulo">
             <small>
-              PIZZA ESCOLHIDA
+              MONTE A PIZZA
+              {{ pizzasPedido.length + 1 }}
             </small>
 
-            <strong>
-              {{ pizza?.nome }}
-            </strong>
+            <span v-if="pizzasPedido.length">
+              Opcional: se não quiser outra
+              pizza, deixe sem tamanho.
+            </span>
           </div>
 
-          <router-link
-            to="/menu"
-            class="change-pizza"
+        <!-- PIZZA -->
+        <div class="inputs">
+          <label for="pizza-base">
+            Pizza
+          </label>
+
+          <select
+            id="pizza-base"
+            v-model.number="pizzaAtualId"
           >
-            Trocar pizza
-          </router-link>
+            <option
+              v-for="item in opcoesPizzas"
+              :key="item.id"
+              :value="Number(item.id)"
+            >
+              {{ item.nome }}
+            </option>
+          </select>
         </div>
 
         <!-- TAMANHO -->
@@ -147,6 +209,50 @@
           </span>
         </div>
 
+        <!-- SABORES -->
+        <div class="inputs">
+          <label>
+            Sabores
+          </label>
+
+          <p class="ajuda">
+            {{ ajudaSabores }}
+          </p>
+
+          <div class="opcoes-grid">
+            <label
+              v-for="sabor in listaSabores"
+              :key="sabor.id"
+              class="opcao"
+              :class="{
+                selecionado:
+                  saborSelecionado(sabor),
+                travado:
+                  saborTravado(sabor),
+              }"
+            >
+              <input
+                v-model="saboresSelecionados"
+                type="checkbox"
+                :value="sabor"
+                :disabled="
+                  saborDesabilitado(sabor)
+                "
+              />
+
+              <div>
+                <strong>
+                  {{ sabor.nome }}
+                </strong>
+
+                <small>
+                  {{ sabor.descricao }}
+                </small>
+              </div>
+            </label>
+          </div>
+        </div>
+
         <!-- BORDA -->
         <div class="inputs">
           <label for="borda-pizza">
@@ -176,6 +282,15 @@
               }}
             </option>
           </select>
+        </div>
+
+          <button
+            type="button"
+            class="adicionar-pizza-btn"
+            @click="adicionarPizza"
+          >
+            + Adicionar esta pizza e montar outra
+          </button>
         </div>
 
         <!-- BEBIDAS -->
@@ -247,85 +362,33 @@
             Resumo do pedido
           </h3>
 
-          <div class="resumo-linha">
-            <span>
-              Pizza
-            </span>
-
-            <strong>
-              {{
-                pizza?.nome ||
-                "--"
-              }}
-            </strong>
-          </div>
-
-          <div class="resumo-linha">
-            <span>
-              Tamanho
-            </span>
-
-            <strong>
-              {{
-                tamanhoSelecionado
-                  ? tamanhoSelecionado
-                      .descricao
-                  : "Não selecionado"
-              }}
-            </strong>
-          </div>
+          <p
+            v-if="!pizzasConsideradas.length"
+            class="resumo-vazio"
+          >
+            Nenhuma pizza montada ainda.
+            Escolha o tamanho para começar.
+          </p>
 
           <div
-            v-if="
-              tamanhoSelecionado
-            "
-            class="resumo-linha"
+            v-for="(item, index) in pizzasConsideradas"
+            :key="`resumo-pizza-${index}`"
+            class="resumo-linha resumo-pizza"
           >
             <span>
-              Valor da pizza
+              Pizza {{ index + 1 }} ·
+              {{ item.tamanho.descricao }}
+
+              <small>
+                {{ descricaoSabores(item) }}
+                <template v-if="item.borda">
+                  · {{ item.borda.nome }}
+                </template>
+              </small>
             </span>
 
             <strong>
-              {{
-                formatarMoeda(
-                  tamanhoSelecionado
-                    .valor
-                )
-              }}
-            </strong>
-          </div>
-
-          <div class="resumo-linha">
-            <span>
-              Borda
-            </span>
-
-            <strong>
-              {{
-                bordaSelecionada
-                  ? bordaSelecionada
-                      .nome
-                  : "Sem borda"
-              }}
-            </strong>
-          </div>
-
-          <div
-            v-if="bordaSelecionada"
-            class="resumo-linha"
-          >
-            <span>
-              Valor da borda
-            </span>
-
-            <strong>
-              +
-              {{
-                formatarMoeda(
-                  bordaSelecionada
-                    .valor
-                )
-              }}
+              {{ formatarMoeda(item.valor) }}
             </strong>
           </div>
 
@@ -463,6 +526,15 @@ import {
   VALOR_MINIMO_FRETE_GRATIS,
 } from "@/services/entrega";
 
+import {
+  descricaoSabores,
+  MAX_SABORES_POR_PIZZA,
+  subtotalPizzas,
+  totalBebidas,
+  validarPizza,
+  valorPizza,
+} from "@/services/itensPedido";
+
 export default {
   name: "PedidoComponent",
 
@@ -485,13 +557,25 @@ export default {
 
       listaBebidas: [],
 
+      listaSabores: [],
+
+      listaPizzasMenu: [],
+
       usuario: null,
 
       nomeCliente: "",
 
+      // Pizza que está sendo montada
+      pizzaAtualId: null,
+
       tamanhoSelecionado: "",
 
+      saboresSelecionados: [],
+
       bordaSelecionada: "",
+
+      // Pizzas já adicionadas ao pedido
+      pizzasPedido: [],
 
       listaBebidasSelecionadas: [],
 
@@ -512,18 +596,80 @@ export default {
         tipo: "info",
 
         mensagem:
-          "Confira sua pizza e complete os detalhes do pedido.",
+          "Monte sua pizza: escolha o tamanho, até 2 sabores e a borda.",
       },
     };
   },
 
   computed: {
+    pizzaAtual() {
+      return (
+        this.listaPizzasMenu.find(
+          (item) =>
+            Number(item.id) ===
+            Number(this.pizzaAtualId)
+        ) || this.pizza
+      );
+    },
+
+    opcoesPizzas() {
+      if (this.listaPizzasMenu.length) {
+        return this.listaPizzasMenu;
+      }
+
+      return this.pizza ? [this.pizza] : [];
+    },
+
+    // Pizzas de sabor fixo (ex.: Calabresa da Casa) já vêm com o sabor marcado
+    saborFixo() {
+      const saborId =
+        this.pizzaAtual?.saborId;
+
+      if (!saborId) {
+        return null;
+      }
+
+      return (
+        this.listaSabores.find(
+          (sabor) =>
+            Number(sabor.id) ===
+            Number(saborId)
+        ) || null
+      );
+    },
+
+    ajudaSabores() {
+      if (this.saborFixo) {
+        return `${this.pizzaAtual.nome} já vem com ${this.saborFixo.nome}. Marque mais 1 sabor se quiser meio a meio.`;
+      }
+
+      return `Escolha 1 ou ${MAX_SABORES_POR_PIZZA} sabores (${MAX_SABORES_POR_PIZZA} sabores = meio a meio).`;
+    },
+
+    // A pizza em montagem entra no pedido assim que tiver tamanho
+    pizzaEmMontagem() {
+      if (!this.tamanhoSelecionado) {
+        return null;
+      }
+
+      return this.montarItemPizza();
+    },
+
+    pizzasConsideradas() {
+      return this.pizzaEmMontagem
+        ? [
+            ...this.pizzasPedido,
+            this.pizzaEmMontagem,
+          ]
+        : this.pizzasPedido;
+    },
+
     fotoAtual() {
       if (
         !this.imagemComErro &&
-        this.pizza?.foto
+        this.pizzaAtual?.foto
       ) {
-        return this.pizza.foto;
+        return this.pizzaAtual.foto;
       }
 
       if (
@@ -536,34 +682,14 @@ export default {
     },
 
     subtotalPedido() {
-      let total = 0;
-
-      total += Number(
-        this.tamanhoSelecionado
-          ?.valor || 0
+      return (
+        subtotalPizzas(
+          this.pizzasConsideradas
+        ) +
+        totalBebidas(
+          this.listaBebidasSelecionadas
+        )
       );
-
-      total += Number(
-        this.bordaSelecionada
-          ?.valor || 0
-      );
-
-      total +=
-        this.listaBebidasSelecionadas
-          .reduce(
-            (
-              soma,
-              bebida
-            ) =>
-              soma +
-              Number(
-                bebida.valor ||
-                  0
-              ),
-            0
-          );
-
-      return total;
     },
 
     taxaEntrega() {
@@ -607,16 +733,14 @@ export default {
   },
 
   watch: {
-    pizza: {
-      immediate: true,
+    pizzaAtualId() {
+      this.imagemComErro =
+        false;
 
-      handler() {
-        this.imagemComErro =
-          false;
+      this.tentouFallback =
+        false;
 
-        this.tentouFallback =
-          false;
-      },
+      this.aplicarSaborPadrao();
     },
   },
 
@@ -655,6 +779,10 @@ export default {
       this.usuario.nome || "";
 
     await this.carregarDados();
+
+    // Definido depois de carregar os sabores para marcar o sabor fixo
+    this.pizzaAtualId =
+      Number(this.pizza.id);
   },
 
   methods: {
@@ -704,15 +832,25 @@ export default {
         const [
           tamanhos,
           opcionais,
+          menu,
         ] =
           await Promise.all([
             get("/tamanhos"),
 
             get("/opcionais"),
+
+            get("/menu"),
           ]);
 
         this.listaTamanhos =
           tamanhos || [];
+
+        this.listaSabores =
+          opcionais?.sabores ||
+          [];
+
+        this.listaPizzasMenu =
+          menu?.pizzas || [];
 
         this.listaBordas =
           opcionais?.bordas ||
@@ -754,6 +892,148 @@ export default {
       );
     },
 
+    descricaoSabores,
+
+    saborSelecionado(sabor) {
+      return this.saboresSelecionados.some(
+        (item) =>
+          Number(item.id) ===
+          Number(sabor.id)
+      );
+    },
+
+    saborTravado(sabor) {
+      return (
+        Boolean(this.saborFixo) &&
+        Number(this.saborFixo.id) ===
+          Number(sabor.id)
+      );
+    },
+
+    saborDesabilitado(sabor) {
+      if (this.saborTravado(sabor)) {
+        return true;
+      }
+
+      return (
+        !this.saborSelecionado(sabor) &&
+        this.saboresSelecionados.length >=
+          MAX_SABORES_POR_PIZZA
+      );
+    },
+
+    aplicarSaborPadrao() {
+      this.saboresSelecionados =
+        this.saborFixo
+          ? [this.saborFixo]
+          : [];
+    },
+
+    // Monta o objeto da pizza que está sendo configurada no formulário
+    montarItemPizza() {
+      const tamanho =
+        this.tamanhoSelecionado
+          ? {
+              id: this.tamanhoSelecionado.id,
+              descricao:
+                this.tamanhoSelecionado
+                  .descricao,
+              valor: Number(
+                this.tamanhoSelecionado
+                  .valor || 0
+              ),
+            }
+          : null;
+
+      const borda =
+        this.bordaSelecionada
+          ? {
+              id: this.bordaSelecionada.id,
+              nome:
+                this.bordaSelecionada.nome,
+              valor: Number(
+                this.bordaSelecionada
+                  .valor || 0
+              ),
+            }
+          : null;
+
+      const item = {
+        pizza: {
+          id: this.pizzaAtual?.id,
+          nome: this.pizzaAtual?.nome,
+          foto: this.pizzaAtual?.foto,
+        },
+        tamanho,
+        sabores:
+          this.saboresSelecionados.map(
+            (sabor) => ({
+              id: sabor.id,
+              nome: sabor.nome,
+            })
+          ),
+        borda,
+      };
+
+      return {
+        ...item,
+        valor: valorPizza(item),
+      };
+    },
+
+    // Usuário mexeu na pizza em montagem (além do sabor que já vem marcado)?
+    montagemAlterada() {
+      return (
+        Boolean(this.tamanhoSelecionado) ||
+        Boolean(this.bordaSelecionada) ||
+        this.saboresSelecionados.length >
+          (this.saborFixo ? 1 : 0)
+      );
+    },
+
+    limparMontagem() {
+      this.tamanhoSelecionado = "";
+
+      this.bordaSelecionada = "";
+
+      this.aplicarSaborPadrao();
+    },
+
+    adicionarPizza() {
+      const item =
+        this.montarItemPizza();
+
+      const erro = validarPizza(item);
+
+      if (erro) {
+        this.erroPedido = erro;
+
+        this.exibirAlerta("erro", erro);
+
+        return;
+      }
+
+      this.pizzasPedido.push(item);
+
+      this.limparMontagem();
+
+      this.erroPedido = "";
+
+      this.exibirAlerta(
+        "sucesso",
+        `Pizza ${this.pizzasPedido.length} adicionada! Monte a próxima ou confirme o pedido.`
+      );
+    },
+
+    removerPizza(index) {
+      this.pizzasPedido.splice(index, 1);
+
+      this.exibirAlerta(
+        "info",
+        "Pizza removida do pedido."
+      );
+    },
+
     validarPedido() {
       this.erroPedido = "";
 
@@ -764,7 +1044,7 @@ export default {
         return false;
       }
 
-      if (!this.pizza?.id) {
+      if (!this.pizzaAtual?.id) {
         this.erroPedido =
           "Escolha uma pizza no cardápio.";
 
@@ -780,8 +1060,30 @@ export default {
         return false;
       }
 
+      // Pizza em montagem com tamanho: precisa estar completa
+      if (this.pizzaEmMontagem) {
+        const erro = validarPizza(
+          this.pizzaEmMontagem
+        );
+
+        if (erro) {
+          this.erroPedido = erro;
+
+          return false;
+        }
+      } else if (
+        this.pizzasPedido.length &&
+        this.montagemAlterada()
+      ) {
+        this.erroPedido = `Escolha o tamanho da pizza ${
+          this.pizzasPedido.length + 1
+        } ou desmarque as opções dela.`;
+
+        return false;
+      }
+
       if (
-        !this.tamanhoSelecionado
+        !this.pizzasConsideradas.length
       ) {
         this.erroPedido =
           "Escolha o tamanho da pizza.";
@@ -827,44 +1129,10 @@ export default {
         nome:
           this.nomeCliente.trim(),
 
-        pizza: {
-          ...this.pizza,
-
-          valor: 0,
-        },
-
-        sabores: [],
-
-        tamanho: {
-          id:
-            this.tamanhoSelecionado
-              .id,
-
-          descricao:
-            this.tamanhoSelecionado
-              .descricao,
-
-          valor:
-            Number(
-              this.tamanhoSelecionado
-                .valor
-            ),
-        },
-
-        borda:
-          this.bordaSelecionada
-            ? {
-                ...this
-                  .bordaSelecionada,
-
-                valor:
-                  Number(
-                    this
-                      .bordaSelecionada
-                      .valor || 0
-                  ),
-              }
-            : null,
+        pizzas:
+          this.pizzasConsideradas.map(
+            (item) => ({ ...item })
+          ),
 
         bebidas:
           this.listaBebidasSelecionadas
@@ -1156,68 +1424,148 @@ export default {
 
 /*
 |--------------------------------------------------------------------------
-| PIZZA SELECIONADA
+| PIZZAS DO PEDIDO E MONTAGEM
 |--------------------------------------------------------------------------
 */
 
-.pizza-selected {
-  margin-bottom:
-    25px;
-
-  padding:
-    16px 18px;
+.pizzas-adicionadas {
+  margin-bottom: 20px;
 
   display: flex;
 
-  align-items: center;
+  flex-direction: column;
 
-  justify-content:
-    space-between;
-
-  gap: 20px;
-
-  border:
-    1px solid #e9d8d1;
-
-  border-radius:
-    13px;
-
-  background:
-    #fff8f5;
+  gap: 10px;
 }
 
-.pizza-selected small {
-  display: block;
-
-  margin-bottom:
-    4px;
-
+.pizzas-adicionadas > small,
+.montagem-titulo small {
   color: #aa7665;
 
   font-size: 9px;
 
   font-weight: 900;
 
-  letter-spacing:
-    1.3px;
+  letter-spacing: 1.3px;
 }
 
-.pizza-selected strong {
+.pizza-adicionada {
+  padding: 14px 16px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  gap: 16px;
+
+  border: 1px solid #e9d8d1;
+
+  border-radius: 13px;
+
+  background: #fff8f5;
+}
+
+.pizza-adicionada strong,
+.pizza-adicionada span {
+  display: block;
+}
+
+.pizza-adicionada strong {
   color: #402d26;
 
-  font-size: 15px;
+  font-size: 14px;
 }
 
-.change-pizza {
+.pizza-adicionada span {
+  margin-top: 3px;
+
+  color: #887670;
+
+  font-size: 12px;
+}
+
+.pizza-adicionada-acoes {
   flex-shrink: 0;
 
-  color: #d94725;
+  display: flex;
+
+  align-items: center;
+
+  gap: 12px;
+}
+
+.remover-pizza {
+  padding: 6px 10px;
+
+  border: 1px solid #f2b8ae;
+
+  border-radius: 8px;
+
+  background: white;
+
+  color: #aa3926;
 
   font-size: 11px;
 
+  font-weight: 800;
+
+  cursor: pointer;
+}
+
+.montagem {
+  margin-bottom: 25px;
+
+  padding: 20px 18px 18px;
+
+  border: 1px dashed #e3c9bf;
+
+  border-radius: 15px;
+}
+
+.montagem-titulo {
+  margin-bottom: 18px;
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 4px;
+}
+
+.montagem-titulo span {
+  color: #887670;
+
+  font-size: 12px;
+}
+
+.montagem .inputs:last-of-type {
+  margin-bottom: 18px;
+}
+
+.adicionar-pizza-btn {
+  width: 100%;
+
+  min-height: 46px;
+
+  border: 1px solid #e35331;
+
+  border-radius: 12px;
+
+  background: #fff3ef;
+
+  color: #c8351b;
+
+  font-size: 14px;
+
   font-weight: 900;
 
-  text-decoration: none;
+  cursor: pointer;
+}
+
+.adicionar-pizza-btn:hover {
+  background: #ffe8e0;
 }
 
 /*
@@ -1447,6 +1795,16 @@ textarea:focus {
   font-size: 11px;
 }
 
+.opcao.travado {
+  cursor: default;
+}
+
+.opcao:has(input:disabled):not(.selecionado) {
+  opacity: 0.55;
+
+  cursor: not-allowed;
+}
+
 /*
 |--------------------------------------------------------------------------
 | RESUMO
@@ -1503,6 +1861,26 @@ textarea:focus {
   font-weight: 700;
 
   color: #44312a;
+}
+
+.resumo-pizza small {
+  display: block;
+
+  margin-top: 3px;
+
+  font-size: 12px;
+}
+
+.resumo-vazio {
+  margin: 0;
+
+  padding: 8px 0;
+
+  color: #887670;
+
+  font-size: 13px;
+
+  border-bottom: 1px solid #eee3df;
 }
 
 .resumo-linha strong.frete-gratis {
@@ -1667,12 +2045,16 @@ textarea:focus {
       22px 17px;
   }
 
-  .pizza-selected {
+  .pizza-adicionada {
     align-items:
       flex-start;
 
     flex-direction:
       column;
+  }
+
+  .montagem {
+    padding: 16px 12px 12px;
   }
 
   .opcoes-grid {

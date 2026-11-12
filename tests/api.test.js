@@ -211,6 +211,77 @@ describe("API La Farina", () => {
     expect(res.body).toEqual({ erro: "Tamanho da pizza é obrigatório." });
   });
 
+  test("POST /pedidos com várias pizzas e 2 sabores cria pedido com 201", async () => {
+    const res = await request(app)
+      .post("/pedidos")
+      .send({
+        usuarioId: 2,
+        nome: "Marina",
+        pizzas: [
+          {
+            pizza: { id: 1, nome: "Pizza Meio-a-Meio" },
+            tamanho: { id: 4, descricao: "Familia - 12 fatias", valor: 65 },
+            sabores: [
+              { id: 1, nome: "Calabresa Artesanal" },
+              { id: 2, nome: "Quatro Queijos" },
+            ],
+            borda: { id: 1, nome: "Borda de Catupiry", valor: 8 },
+            valor: 73,
+          },
+          {
+            pizza: { id: 4, nome: "Frango Catupiry" },
+            tamanho: { id: 2, descricao: "Media - 6 fatias", valor: 40 },
+            sabores: [{ id: 3, nome: "Frango com Catupiry" }],
+            borda: null,
+            valor: 40,
+          },
+        ],
+        bebidas: [],
+        statusId: 5,
+        taxaEntrega: 0,
+        total: 113,
+      });
+
+    expect(res.status).toBe(201);
+    expect(res.body.pizzas).toHaveLength(2);
+    expect(res.body.pizzas[0].sabores).toHaveLength(2);
+    expect(res.body).toHaveProperty("total", 113);
+  });
+
+  test("POST /pedidos com lista de pizzas vazia retorna 400", async () => {
+    const res = await request(app).post("/pedidos").send({ nome: "Marina", pizzas: [] });
+
+    expect(res.status).toBe(400);
+    expect(res.body).toEqual({ erro: "Adicione ao menos uma pizza ao pedido." });
+  });
+
+  test("POST /pedidos com pizza sem tamanho na lista retorna 400", async () => {
+    const res = await request(app)
+      .post("/pedidos")
+      .send({
+        nome: "Marina",
+        pizzas: [
+          { tamanho: { id: 2 }, sabores: [{ id: 1 }] },
+          { sabores: [{ id: 2 }] },
+        ],
+      });
+
+    expect(res.status).toBe(400);
+    expect(res.body).toEqual({ erro: "Tamanho da pizza é obrigatório." });
+  });
+
+  test("POST /pedidos com mais de 2 sabores na pizza retorna 400", async () => {
+    const res = await request(app)
+      .post("/pedidos")
+      .send({
+        nome: "Marina",
+        pizzas: [{ tamanho: { id: 2 }, sabores: [{ id: 1 }, { id: 2 }, { id: 3 }] }],
+      });
+
+    expect(res.status).toBe(400);
+    expect(res.body).toEqual({ erro: "Cada pizza pode ter no máximo 2 sabores." });
+  });
+
   test("POST /usuarios sem email/senha retorna 400", async () => {
     const res = await request(app).post("/usuarios").send({ nome: "Ana" });
 

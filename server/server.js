@@ -10,6 +10,8 @@ function sendJsonError(res, statusCode, message) {
   return res.status(statusCode).json({ erro: message });
 }
 
+const MAX_SABORES_POR_PIZZA = 2;
+
 function isValidEmail(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || "").trim());
 }
@@ -49,13 +51,33 @@ function createApp(options = {}) {
   });
 
   app.post("/pedidos", (req, res, next) => {
-    const { nome, tamanho } = req.body || {};
+    const { nome, tamanho, pizzas } = req.body || {};
 
     if (!String(nome || "").trim()) {
       return sendJsonError(res, 400, "Nome do cliente é obrigatório.");
     }
 
-    if (!tamanho || !String(tamanho.id ?? "").trim()) {
+    const temTamanho = (item) => Boolean(item?.tamanho) && String(item.tamanho.id ?? "").trim() !== "";
+
+    // Pedido com várias pizzas: cada uma precisa de tamanho e no máximo 2 sabores.
+    if (pizzas !== undefined) {
+      if (!Array.isArray(pizzas) || pizzas.length === 0) {
+        return sendJsonError(res, 400, "Adicione ao menos uma pizza ao pedido.");
+      }
+
+      if (!pizzas.every(temTamanho)) {
+        return sendJsonError(res, 400, "Tamanho da pizza é obrigatório.");
+      }
+
+      if (pizzas.some((item) => Array.isArray(item.sabores) && item.sabores.length > MAX_SABORES_POR_PIZZA)) {
+        return sendJsonError(res, 400, `Cada pizza pode ter no máximo ${MAX_SABORES_POR_PIZZA} sabores.`);
+      }
+
+      return next();
+    }
+
+    // Formato antigo: uma pizza só, com o tamanho no topo do pedido.
+    if (!temTamanho({ tamanho })) {
       return sendJsonError(res, 400, "Tamanho da pizza é obrigatório.");
     }
 
@@ -75,7 +97,9 @@ function createApp(options = {}) {
       "taxaEntrega",
       "nome",
       "pizza",
+      "pizzas",
       "tamanho",
+      "sabores",
       "borda",
       "bebidas",
       "usuarioId",
