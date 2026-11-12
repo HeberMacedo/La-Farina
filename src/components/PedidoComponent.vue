@@ -353,6 +353,20 @@
             </strong>
           </div>
 
+          <div class="resumo-linha resumo-subtotal">
+            <span>
+              Subtotal
+            </span>
+
+            <strong>
+              {{
+                formatarMoeda(
+                  subtotalPedido
+                )
+              }}
+            </strong>
+          </div>
+
           <div class="resumo-linha">
             <span>
               Taxa de entrega
@@ -379,12 +393,7 @@
             v-if="taxaEntrega > 0"
             class="aviso-frete"
           >
-            Entrega grátis em pedidos acima de
-            {{ formatarMoeda(valorMinimoFreteGratis) }}.
-            <template v-if="subtotalPedido > 0">
-              Faltam
-              {{ formatarMoeda(valorFaltaFreteGratis) }}.
-            </template>
+            {{ mensagemFreteGratis }}
           </p>
 
           <div class="resumo-total">
@@ -486,9 +495,6 @@ export default {
 
       listaBebidasSelecionadas: [],
 
-      valorMinimoFreteGratis:
-        VALOR_MINIMO_FRETE_GRATIS,
-
       observacao: "",
 
       enviando: false,
@@ -572,6 +578,24 @@ export default {
           this.subtotalPedido,
         0
       );
+    },
+
+    mensagemFreteGratis() {
+      const regra = `Entrega grátis quando o subtotal (sem a entrega) passa de ${this.formatarMoeda(
+        VALOR_MINIMO_FRETE_GRATIS
+      )}.`;
+
+      if (this.subtotalPedido <= 0) {
+        return regra;
+      }
+
+      if (this.valorFaltaFreteGratis === 0) {
+        return `${regra} Adicione qualquer item para ganhar.`;
+      }
+
+      return `${regra} Adicione mais de ${this.formatarMoeda(
+        this.valorFaltaFreteGratis
+      )} em itens para ganhar.`;
     },
 
     totalPedido() {
@@ -1472,6 +1496,13 @@ textarea:focus {
   color: #44312a;
 
   text-align: right;
+}
+
+.resumo-subtotal span,
+.resumo-subtotal strong {
+  font-weight: 700;
+
+  color: #44312a;
 }
 
 .resumo-linha strong.frete-gratis {
