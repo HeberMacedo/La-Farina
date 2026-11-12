@@ -5,7 +5,17 @@ Projeto desenvolvido como solução web para gestão de pedidos de pizzaria, com
 ## Demonstração
 
 * Aplicação web: https://hebermacedo.github.io/La-Farina/#/menu
-* API: https://api-tpizza-artesanal.onrender.com
+* API: https://api-tpizza-artesanal.onrender.com (publicada a partir do repositório [banco-json](https://github.com/HeberMacedo/banco-json), com o mesmo servidor de `server/server.js`)
+
+### Contas de teste
+
+| Perfil | E-mail | Senha |
+|---|---|---|
+| Administrador | admin@tpizza.com | admin123 |
+| Cliente | marina@teste.com | 123456 |
+| Cliente | heber@teste.com | 123456 |
+
+> A API online roda no plano gratuito do Render, que não tem disco persistente: quando o serviço reinicia, o banco volta ao estado original. Contas e pedidos criados pelo site somem nesse momento, mas as contas acima sempre existem.
 
 ## Tecnologias
 

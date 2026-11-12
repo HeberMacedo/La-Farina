@@ -17,12 +17,12 @@
       "criadoEm": "2026-09-15T17:00:00-03:00"
     },
     {
+      "id": 3,
       "nome": "Heber Macedo",
-      "email": "heberamerico87@gmail.com",
-      "senha": "Macedo@1234",
+      "email": "heber@teste.com",
+      "senha": "123456",
       "tipo": "usuario",
-      "criadoEm": "2026-09-15T20:43:53.857Z",
-      "id": 3
+      "criadoEm": "2026-09-15T17:00:00-03:00"
     }
   ],
   "tamanhos": [
@@ -77,7 +77,57 @@
       "descricao": "Pedido cancelado"
     }
   ],
-  "pedidos": [],
+  "pedidos": [
+    {
+      "id": 1,
+      "usuarioId": 2,
+      "nome": "Marina Souza",
+      "tamanho": {
+        "id": 3,
+        "descricao": "Grande - 8 fatias",
+        "valor": 50
+      },
+      "sabores": [
+        {
+          "id": 1,
+          "nome": "Calabresa Artesanal",
+          "descricao": "Calabresa fatiada, cebola roxa, mussarela e oregano.",
+          "valor": 0
+        },
+        {
+          "id": 2,
+          "nome": "Quatro Queijos",
+          "descricao": "Mussarela, parmesao, provolone e catupiry.",
+          "valor": 0
+        }
+      ],
+      "borda": {
+        "id": 1,
+        "nome": "Borda de Catupiry",
+        "valor": 8
+      },
+      "bebidas": [
+        {
+          "id": 1,
+          "nome": "Refrigerante Cola 2L",
+          "valor": 12
+        }
+      ],
+      "pizza": {
+        "id": 1,
+        "nome": "Pizza Meio-a-Meio",
+        "foto": "https://images.unsplash.com/photo-1594007654729-407eedc4be65?auto=format&fit=crop&w=900&q=80",
+        "descricao": "Monte uma pizza com ate dois sabores da casa e escolha o tamanho ideal.",
+        "valor": 0,
+        "eh_novidade": true
+      },
+      "statusId": 5,
+      "total": 70,
+      "observacao": "",
+      "dataPedido": "2026-09-15T17:00:00-03:00",
+      "atualizadoEm": "2026-09-15T17:00:00-03:00"
+    }
+  ],
   "opcionais": {
     "sabores": [
       {
