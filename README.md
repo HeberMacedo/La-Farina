@@ -6,6 +6,9 @@ Projeto desenvolvido como solução web para gestão de pedidos de pizzaria, com
 
 * Aplicação web: https://hebermacedo.github.io/La-Farina/#/menu
 * API: https://api-tpizza-artesanal.onrender.com (publicada a partir do repositório [banco-json](https://github.com/HeberMacedo/banco-json), com o mesmo servidor de `server/server.js`)
+* Saúde e métricas da API: [/health](https://api-tpizza-artesanal.onrender.com/health) e [/metrics](https://api-tpizza-artesanal.onrender.com/metrics)
+
+O site é publicado automaticamente no GitHub Pages pelo pipeline, só depois que todos os testes passam. A API é publicada no Render a cada push no repositório `banco-json`.
 
 ### Contas de teste
 
@@ -31,11 +34,11 @@ Projeto desenvolvido como solução web para gestão de pedidos de pizzaria, com
 
 ```bash
 npm install
-npm run bancojson
-npm run serve
+npm run bancojson   # API em http://localhost:3000
+npm run serve       # site em http://localhost:8080 (em outro terminal)
 ```
 
-A API fica em `http://localhost:3000` e a aplicação em `http://localhost:8080` quando usada com Docker.
+Com Docker (seção abaixo) as portas são as mesmas: API em `http://localhost:3000` e site em `http://localhost:8080`.
 
 ## Docker
 
@@ -49,18 +52,40 @@ Para limpar o volume local:
 docker compose down -v
 ```
 
+Para subir também o Prometheus e o Grafana, veja a seção [Observabilidade](#observabilidade).
+
 ## Estrutura do projeto
 
 ```markdown
+├── .github/workflows/
+│   ├── ci.yml             # Testes com cobertura, build e publicação da imagem no Docker Hub
+│   └── pages.yml          # Testes, build e deploy do site no GitHub Pages
+├── db/
+│   └── db.json            # Banco de dados da API (cardápio, usuários e pedidos)
+├── observabilidade/
+│   ├── prometheus.yml     # Coleta das métricas da API a cada 5 s
+│   ├── alertas.yml        # Regras de alerta (API fora do ar, taxa de erro, lentidão, recusas)
+│   └── grafana/           # Fonte de dados e painel "La Farina — API"
+├── postman/               # Coleção do Postman com as rotas da API
 ├── public/
 │   ├── img/               # Recursos visuais (Banner, Logo Circular e Ícones)
 │   └── index.html         # Template HTML principal injetado pelo Webpack
+├── scripts/
+│   ├── gerar-trafego.js   # Gera tráfego na API para a demonstração de observabilidade
+│   └── resumo-cobertura.js # Escreve a tabela de cobertura no resumo do GitHub Actions
+├── server/
+│   ├── server.js          # API: JSON Server com validações, /health e /metrics
+│   └── observabilidade.js # Logs em JSON, métricas no formato Prometheus e trace id
 ├── src/
 │   ├── components/        # Componentes reutilizáveis (NavBar, Banner, Alerta, Pedido)
+│   ├── services/          # Chamadas à API, login, pedidos e regras (frete, sabores)
 │   ├── views/             # Telas principais mapeadas pelas rotas da aplicação
 │   ├── router/            # Configurações de navegação SPA (Single Page Application)
 │   ├── App.vue            # Componente raiz da aplicação
 │   └── main.js            # Inicialização e montagem do ecossistema Vue
+├── tests/                 # 75 testes automatizados (Jest + Supertest)
+├── Dockerfile             # Imagens do site (Nginx) e da API (estágio "api")
+├── docker-compose.yml     # Site, API e, no perfil "observabilidade", Prometheus e Grafana
 ├── vue.config.js          # Configurações globais de compilação do Vue CLI
 └── package.json           # Dependências e scripts de automação do projeto
 ```
