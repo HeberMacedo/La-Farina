@@ -11,8 +11,14 @@ services:
       HOST: 0.0.0.0
       # Liga o header X-Simulate-Error só para demonstração: SIMULAR_ERROS=true docker compose ...
       SIMULAR_ERROS: ${SIMULAR_ERROS:-false}
+      # Traces (OpenTelemetry) vão para o Jaeger; se ele não estiver no ar, são descartados.
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-http://jaeger:4318}
+      OTEL_SERVICE_NAME: la-farina-api
+      # Cópia do log em arquivo, lida pelo Logstash (ELK).
+      LOG_ARQUIVO: /app/logs/api.log
     volumes:
       - db-data:/app/db
+      - api-logs:/app/logs
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:3000/health"]
       interval: 10s
@@ -33,7 +39,8 @@ services:
       - api
     restart: unless-stopped
 
-  # ---- Observabilidade (opcional): docker compose --profile observabilidade up -d ----
+  # ---- Observabilidade: docker compose --profile observabilidade up -d ----
+  # Prometheus (métricas) + Grafana (painéis e alertas) + Jaeger (traces do OpenTelemetry)
   prometheus:
     image: prom/prometheus:v2.55.1
     profiles: ["observabilidade"]
@@ -60,7 +67,79 @@ services:
       - ./observabilidade/grafana/dashboards:/var/lib/grafana/dashboards:ro
     depends_on:
       - prometheus
+      - jaeger
     restart: unless-stopped
+
+  jaeger:
+    image: jaegertracing/jaeger:2.1.0
+    profiles: ["observabilidade"]
+    ports:
+      - "16686:16686"
+    restart: unless-stopped
+
+  # ---- Logs centralizados (ELK): docker compose --profile elk up -d ----
+  # Logstash lê o log da API -> Elasticsearch guarda e indexa -> Kibana pesquisa.
+  # Precisa de uns 2 GB de memória livre no Docker.
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.17.0
+    profiles: ["elk"]
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "false"
+      ES_JAVA_OPTS: -Xms512m -Xmx512m
+    ports:
+      - "9200:9200"
+    volumes:
+      - es-data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health | grep -qE '\"status\":\"(green|yellow)\"'"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+    restart: unless-stopped
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.17.0
+    profiles: ["elk"]
+    environment:
+      LS_JAVA_OPTS: -Xms256m -Xmx256m
+      XPACK_MONITORING_ENABLED: "false"
+    volumes:
+      - ./observabilidade/elk/logstash.conf:/usr/share/logstash/pipeline/logstash.conf:ro
+      - api-logs:/logs:ro
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    restart: unless-stopped
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.17.0
+    profiles: ["elk"]
+    environment:
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+      TELEMETRY_OPTIN: "false"
+      TELEMETRY_ALLOWCHANGINGOPTINSTATUS: "false"
+      # Ambiente local de estudo: sem o aviso de "segurança desligada".
+      SECURITY_SHOWINSECURECLUSTERWARNING: "false"
+    ports:
+      - "5601:5601"
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Roda uma vez: cria no Kibana a visão dos logs e a pesquisa "Erros e recusas da API".
+  kibana-setup:
+    image: curlimages/curl:8.11.1
+    profiles: ["elk"]
+    entrypoint: ["sh", "/setup.sh"]
+    volumes:
+      - ./observabilidade/elk/kibana-setup.sh:/setup.sh:ro
+    depends_on:
+      - kibana
+    restart: "no"
 
 volumes:
   db-data:
+  api-logs:
+  es-data:

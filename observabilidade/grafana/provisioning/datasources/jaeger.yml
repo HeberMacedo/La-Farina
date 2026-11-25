@@ -1,0 +1,7 @@
+apiVersion: 1
+datasources:
+  - name: Jaeger
+    uid: jaeger-lafarina
+    type: jaeger
+    access: proxy
+    url: http://jaeger:16686

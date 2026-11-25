@@ -1,12 +1,17 @@
 // Observabilidade da API do La Farina.
 //
-// Este módulo junta os três sinais clássicos de observabilidade, sem depender
-// de bibliotecas externas:
-//   - LOGS: uma linha JSON por evento (fácil de mandar para o Elastic Stack);
+// Este módulo junta os três sinais clássicos de observabilidade:
+//   - LOGS: uma linha JSON por evento. Com LOG_ARQUIVO definido, a linha também
+//     vai para um arquivo que o Logstash lê e manda para o Elasticsearch/Kibana;
 //   - MÉTRICAS: contadores e histogramas no formato texto do Prometheus (/metrics);
-//   - TRACES: um trace id por requisição, no mesmo formato do OpenTelemetry
-//     (W3C traceparent), devolvido no header X-Request-Id e gravado em todo log.
+//   - TRACES: um trace id por requisição. Com o OpenTelemetry ligado (telemetria.js)
+//     é o id do trace que vai para o Jaeger; sem ele, um id no mesmo formato
+//     (W3C traceparent). Ele volta no header X-Request-Id e vai em todo log.
 const crypto = require("crypto");
+const fs = require("fs");
+const path = require("path");
+
+const { traceIdAtual } = require("./telemetria");
 
 // Faixas (em segundos) do histograma de latência. O Prometheus usa essas faixas
 // para calcular percentis, como o p95 ("95% das requisições levaram até X").
@@ -128,7 +133,34 @@ function criarHistograma(limites) {
   };
 }
 
-function criarObservabilidade({ servico = "la-farina-api", logs = true, coletarExtras } = {}) {
+// Prepara a escrita do log em arquivo (para o Logstash). Devolve null se não der.
+function criarArquivoDeLog(arquivo) {
+  if (!arquivo) {
+    return null;
+  }
+
+  try {
+    fs.mkdirSync(path.dirname(arquivo), { recursive: true });
+
+    return (linha) => {
+      try {
+        fs.appendFileSync(arquivo, `${linha}\n`);
+      } catch {
+        // Disco cheio ou sem permissão: o log no console continua funcionando.
+      }
+    };
+  } catch {
+    return null;
+  }
+}
+
+function criarObservabilidade({
+  servico = "la-farina-api",
+  logs = true,
+  arquivoLog = process.env.LOG_ARQUIVO,
+  coletarExtras,
+} = {}) {
+  const escreverNoArquivo = logs ? criarArquivoDeLog(arquivoLog) : null;
   const requisicoes = criarContador();
   const latencia = criarHistograma(LIMITES_LATENCIA_SEGUNDOS);
   const pedidosCriados = criarContador();
@@ -157,11 +189,16 @@ function criarObservabilidade({ servico = "la-farina-api", logs = true, coletarE
     } else {
       console.log(linha);
     }
+
+    if (escreverNoArquivo) {
+      escreverNoArquivo(linha);
+    }
   }
 
   function middleware(req, res, next) {
     const inicio = process.hrtime.bigint();
-    const traceId = obterTraceId(req);
+    // Com o OpenTelemetry ligado, usa o id do trace que vai para o Jaeger.
+    const traceId = traceIdAtual() || obterTraceId(req);
 
     req.traceId = traceId;
     res.setHeader("X-Request-Id", traceId);

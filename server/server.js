@@ -1,3 +1,8 @@
+// O OpenTelemetry precisa ligar antes de o json-server (Express) ser carregado.
+const telemetria = require("./telemetria");
+
+telemetria.iniciarTelemetria();
+
 const fs = require("fs");
 const path = require("path");
 const jsonServer = require("json-server");
@@ -11,6 +16,7 @@ function readDb(dbPath) {
 function sendJsonError(res, statusCode, message) {
   // Guarda o motivo para o log e para a métrica de validações rejeitadas.
   res.locals.motivoErro = message;
+  telemetria.registrarEvento("requisicao_recusada", { status: statusCode, motivo: message });
   return res.status(statusCode).json({ erro: message });
 }
 
@@ -39,6 +45,41 @@ const MAX_SABORES_POR_PIZZA = 2;
 
 function isValidEmail(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || "").trim());
+}
+
+// Regras de um pedido novo. Devolve a mensagem de erro, ou null se estiver tudo certo.
+function validarPedido(body) {
+  const { nome, tamanho, pizzas } = body || {};
+
+  if (!String(nome || "").trim()) {
+    return "Nome do cliente é obrigatório.";
+  }
+
+  const temTamanho = (item) => Boolean(item?.tamanho) && String(item.tamanho.id ?? "").trim() !== "";
+
+  // Pedido com várias pizzas: cada uma precisa de tamanho e no máximo 2 sabores.
+  if (pizzas !== undefined) {
+    if (!Array.isArray(pizzas) || pizzas.length === 0) {
+      return "Adicione ao menos uma pizza ao pedido.";
+    }
+
+    if (!pizzas.every(temTamanho)) {
+      return "Tamanho da pizza é obrigatório.";
+    }
+
+    if (pizzas.some((item) => Array.isArray(item.sabores) && item.sabores.length > MAX_SABORES_POR_PIZZA)) {
+      return `Cada pizza pode ter no máximo ${MAX_SABORES_POR_PIZZA} sabores.`;
+    }
+
+    return null;
+  }
+
+  // Formato antigo: uma pizza só, com o tamanho no topo do pedido.
+  if (!temTamanho({ tamanho })) {
+    return "Tamanho da pizza é obrigatório.";
+  }
+
+  return null;
 }
 
 function createApp(options = {}) {
@@ -115,37 +156,21 @@ function createApp(options = {}) {
   });
 
   app.post("/pedidos", (req, res, next) => {
-    const { nome, tamanho, pizzas } = req.body || {};
+    // Cada etapa vira um span próprio no trace do pedido (Jaeger).
+    const erro = telemetria.executarComSpan("validar_pedido", {}, () => validarPedido(req.body));
 
-    if (!String(nome || "").trim()) {
-      return sendJsonError(res, 400, "Nome do cliente é obrigatório.");
+    if (erro) {
+      return sendJsonError(res, 400, erro);
     }
 
-    const temTamanho = (item) => Boolean(item?.tamanho) && String(item.tamanho.id ?? "").trim() !== "";
+    const { pizzas, total } = req.body;
 
-    // Pedido com várias pizzas: cada uma precisa de tamanho e no máximo 2 sabores.
-    if (pizzas !== undefined) {
-      if (!Array.isArray(pizzas) || pizzas.length === 0) {
-        return sendJsonError(res, 400, "Adicione ao menos uma pizza ao pedido.");
-      }
+    telemetria.anotar({
+      "lafarina.pedido.total": Number(total) || 0,
+      "lafarina.pedido.quantidade_pizzas": Array.isArray(pizzas) ? pizzas.length : 1,
+    });
 
-      if (!pizzas.every(temTamanho)) {
-        return sendJsonError(res, 400, "Tamanho da pizza é obrigatório.");
-      }
-
-      if (pizzas.some((item) => Array.isArray(item.sabores) && item.sabores.length > MAX_SABORES_POR_PIZZA)) {
-        return sendJsonError(res, 400, `Cada pizza pode ter no máximo ${MAX_SABORES_POR_PIZZA} sabores.`);
-      }
-
-      return next();
-    }
-
-    // Formato antigo: uma pizza só, com o tamanho no topo do pedido.
-    if (!temTamanho({ tamanho })) {
-      return sendJsonError(res, 400, "Tamanho da pizza é obrigatório.");
-    }
-
-    next();
+    return telemetria.executarComSpan("gravar_pedido_no_banco", {}, () => next());
   });
 
   app.patch("/pedidos/:id", (req, res, next) => {

@@ -28,7 +28,9 @@ O site é publicado automaticamente no GitHub Pages pelo pipeline, só depois qu
 * Docker
 * GitHub Actions
 * Jest + Supertest (testes)
-* Prometheus + Grafana (observabilidade)
+* Prometheus + Grafana (métricas, painéis e alertas)
+* OpenTelemetry + Jaeger (traces)
+* Elasticsearch + Logstash + Kibana — ELK (logs centralizados)
 
 ## Como executar localmente
 
@@ -52,7 +54,7 @@ Para limpar o volume local:
 docker compose down -v
 ```
 
-Para subir também o Prometheus e o Grafana, veja a seção [Observabilidade](#observabilidade).
+Para subir também Prometheus, Grafana, Jaeger e a stack ELK, veja a seção [Observabilidade](#observabilidade).
 
 ## Estrutura do projeto
 
@@ -65,7 +67,8 @@ Para subir também o Prometheus e o Grafana, veja a seção [Observabilidade](#o
 ├── observabilidade/
 │   ├── prometheus.yml     # Coleta das métricas da API a cada 5 s
 │   ├── alertas.yml        # Regras de alerta (API fora do ar, taxa de erro, lentidão, recusas)
-│   └── grafana/           # Fonte de dados e painel "La Farina — API"
+│   ├── grafana/           # Fontes de dados (Prometheus e Jaeger) e painel "La Farina — API"
+│   └── elk/               # Pipeline do Logstash e configuração automática do Kibana
 ├── postman/               # Coleção do Postman com as rotas da API
 ├── public/
 │   ├── img/               # Recursos visuais (Banner, Logo Circular e Ícones)
@@ -75,7 +78,8 @@ Para subir também o Prometheus e o Grafana, veja a seção [Observabilidade](#o
 │   └── resumo-cobertura.js # Escreve a tabela de cobertura no resumo do GitHub Actions
 ├── server/
 │   ├── server.js          # API: JSON Server com validações, /health e /metrics
-│   └── observabilidade.js # Logs em JSON, métricas no formato Prometheus e trace id
+│   ├── observabilidade.js # Logs em JSON (console e arquivo), métricas Prometheus e trace id
+│   └── telemetria.js      # Traces com OpenTelemetry, enviados ao Jaeger
 ├── src/
 │   ├── components/        # Componentes reutilizáveis (NavBar, Banner, Alerta, Pedido)
 │   ├── services/          # Chamadas à API, login, pedidos e regras (frete, sabores)
@@ -83,9 +87,9 @@ Para subir também o Prometheus e o Grafana, veja a seção [Observabilidade](#o
 │   ├── router/            # Configurações de navegação SPA (Single Page Application)
 │   ├── App.vue            # Componente raiz da aplicação
 │   └── main.js            # Inicialização e montagem do ecossistema Vue
-├── tests/                 # 75 testes automatizados (Jest + Supertest)
+├── tests/                 # 85 testes automatizados (Jest + Supertest)
 ├── Dockerfile             # Imagens do site (Nginx) e da API (estágio "api")
-├── docker-compose.yml     # Site, API e, no perfil "observabilidade", Prometheus e Grafana
+├── docker-compose.yml     # Site, API; perfis "observabilidade" (Prometheus, Grafana, Jaeger) e "elk"
 ├── vue.config.js          # Configurações globais de compilação do Vue CLI
 └── package.json           # Dependências e scripts de automação do projeto
 ```
@@ -105,16 +109,17 @@ O sistema atual cobre:
 - painel administrativo para acompanhamento do status dos pedidos;
 - validação client-side antes do envio de pedido e cadastro.
 
-O sistema não pretende ser um backend completo de produção com autenticação em JWT, banco relacional ou filas de processamento. A API tem uma camada básica de observabilidade (logs estruturados, métricas e health check), descrita na seção [Observabilidade](#observabilidade). O escopo principal é demonstrar o fluxo do negócio de pizzaria em uma aplicação front-end conectada a uma API de mock/rest.
+O sistema não pretende ser um backend completo de produção com autenticação em JWT, banco relacional ou filas de processamento. A API tem observabilidade completa (logs centralizados no ELK, métricas no Prometheus/Grafana, traces no Jaeger via OpenTelemetry e health check), descrita na seção [Observabilidade](#observabilidade). O escopo principal é demonstrar o fluxo do negócio de pizzaria em uma aplicação front-end conectada a uma API de mock/rest.
 
 ### Tipos de teste aplicados
 
-São 75 testes automatizados em 5 arquivos, com cerca de 92% das linhas cobertas.
+São 85 testes automatizados em 6 arquivos, com cerca de 90% das linhas cobertas.
 
 | Arquivo | Tipo | Testes | O que valida |
 |---|---|---|---|
 | `tests/api.test.js` | Integração (API) | 23 | Status HTTP e corpo de todas as rotas, fluxos de sucesso e de erro |
 | `tests/observabilidade.test.js` | Integração (API) | 22 | `/health`, `/metrics`, trace id, logs estruturados e tratamento de erros |
+| `tests/telemetria.test.js` | Integração (OpenTelemetry e logs) | 10 | Spans do pedido, trace id no `X-Request-Id`, eventos de recusa e log em arquivo para o ELK |
 | `tests/servicosFront.test.js` | Unidade (front-end) | 16 | Cliente HTTP, login, cadastro e chamadas de pedidos com a API simulada |
 | `tests/itensPedido.test.js` | Unidade (regra de negócio) | 10 | Várias pizzas, 1 ou 2 sabores, soma de valores |
 | `tests/entrega.test.js` | Unidade (regra de negócio) | 4 | Taxa de R$ 8,00 e frete grátis acima de R$ 80,00 |
@@ -229,7 +234,7 @@ flowchart LR
 
 ```bash
 npm install
-npm test                # roda os 75 testes
+npm test                # roda os 85 testes
 npm run test:coverage   # roda os testes e gera o relatório de cobertura em coverage/
 ```
 
@@ -252,6 +257,21 @@ A suíte de testes usa `Jest + Supertest` para validar status e corpo das respos
 | OBS-11 | Log estruturado | Captura a saída do console | Linha JSON com `traceId`, `rota`, `status` e `duracaoMs` |
 | OBS-12 | Privacidade no log | `GET /usuarios?email=...` | O e-mail não aparece no log |
 | OBS-13 | JSON malformado | Corpo inválido no `POST /pedidos` | `400` com `{ "erro": "JSON inválido na requisição." }`, sem stack trace |
+
+## Cenários de teste de traces (OpenTelemetry) e logs para o ELK
+
+| ID | Cenário | Como é testado | Resultado esperado |
+|---|---|---|---|
+| OTEL-01 | Telemetria desligada | Sem `OTEL_EXPORTER_OTLP_ENDPOINT` | Nada do OpenTelemetry é carregado e a API funciona igual |
+| OTEL-02 | Iniciar duas vezes | Chama `iniciarTelemetria` de novo | Não cria um segundo provedor |
+| OTEL-03 | Span com atributos | `executarComSpan("calcular_frete")` | Span exportado com atributos, evento e o mesmo trace id |
+| OTEL-04 | Erro dentro de um span | Função que lança erro | Span com status de erro e exceção registrada; erro relançado |
+| OTEL-05 | Pedido válido | `POST /pedidos` com telemetria ligada | Spans `validar_pedido` e `gravar_pedido_no_banco`; `X-Request-Id` = trace id |
+| OTEL-06 | Pedido recusado | `POST /pedidos` sem nome | Evento `requisicao_recusada` com o motivo; nada é gravado |
+| OTEL-07 | Nome do span | `/pedidos/15?usuarioId=2` | `/pedidos/:id` (sem id e sem query string) |
+| OBS-ARQ-01 | Log em arquivo | `LOG_ARQUIVO` definido | Cada log vira uma linha JSON no arquivo lido pelo Logstash |
+| OBS-ARQ-02 | Arquivo impossível de criar | Caminho inválido | A API continua funcionando |
+| OBS-ARQ-03 | Logs desligados | `logs: false` | Nada é escrito no arquivo |
 
 ## Cenários de teste das regras de negócio
 
@@ -282,28 +302,34 @@ A suíte de testes usa `Jest + Supertest` para validar status e corpo das respos
 
 ## Observabilidade
 
-A API (`server/observabilidade.js`) gera os três sinais de observabilidade sem bibliotecas externas:
+A API gera os três sinais de observabilidade e cada um tem a sua ferramenta:
 
-| Sinal | Onde ver | O que tem |
+| Sinal | Como a API gera | Onde ver |
 |---|---|---|
-| Logs | Saída da API (`docker compose logs api`) | Uma linha JSON por requisição: horário, nível, trace id, rota, status, duração e motivo do erro |
-| Métricas | `GET /metrics` (formato Prometheus) | Requisições por rota e status, latência, pedidos criados, valor vendido, validações recusadas e pedidos por status |
-| Traces | Header `X-Request-Id` | Um id por requisição, no formato de trace do OpenTelemetry, presente em todos os logs daquela requisição |
+| Métricas | `GET /metrics` no formato do Prometheus (`server/observabilidade.js`) | **Prometheus** coleta a cada 5 s e dispara alertas; **Grafana** mostra o painel "La Farina — API" |
+| Logs | Uma linha JSON por evento, no console e no arquivo `LOG_ARQUIVO` | **ELK**: o Logstash lê o arquivo, o Elasticsearch indexa e o **Kibana** pesquisa |
+| Traces | **OpenTelemetry** (`server/telemetria.js`): um trace por requisição, com spans de validação e gravação | **Jaeger** (e também no Grafana, fonte de dados Jaeger) |
 | Saúde | `GET /health` | `200` quando a API lê o banco, `503` quando não consegue |
 
-### Subir Prometheus e Grafana
+O mesmo **trace id** aparece no header `X-Request-Id`, em todo log no Kibana e no Jaeger. Dá para achar um erro no Kibana, copiar o `traceId` e abrir o trace completo no Jaeger.
+
+### Subir tudo
 
 ```bash
-docker compose --profile observabilidade up -d --build
+docker compose --profile observabilidade --profile elk up -d --build api prometheus grafana jaeger elasticsearch logstash kibana kibana-setup
 ```
 
-| Serviço | Endereço |
-|---|---|
-| API | http://localhost:3000 (métricas em `/metrics`) |
-| Prometheus | http://localhost:9090 (alertas em `/alerts`) |
-| Grafana | http://localhost:3001 (painel "La Farina — API" abre direto) |
+O perfil `observabilidade` é leve (Prometheus, Grafana e Jaeger). O perfil `elk` precisa de uns 2 GB de memória livre no Docker; dá para subir só um dos dois.
 
-Para gerar tráfego e ver os gráficos se mexendo:
+| Serviço | Endereço | O que mostra |
+|---|---|---|
+| API | http://localhost:3000 | Métricas em `/metrics`, saúde em `/health` |
+| Prometheus | http://localhost:9090 | Alertas em `/alerts` |
+| Grafana | http://localhost:3001 | Painel "La Farina — API" (abre direto) |
+| Jaeger | http://localhost:16686 | Traces do serviço `la-farina-api` |
+| Kibana | http://localhost:5601 | Discover > "Erros e recusas da API" (criada automaticamente) |
+
+Para gerar tráfego e ver tudo se mexendo:
 
 ```bash
 npm run demo:trafego                    # 60 s de tráfego normal
@@ -312,11 +338,16 @@ npm run demo:trafego                    # 60 s de tráfego normal
 Para demonstrar um alerta, suba a API aceitando falhas simuladas e gere tráfego com erros:
 
 ```bash
-SIMULAR_ERROS=true docker compose --profile observabilidade up -d --build
+SIMULAR_ERROS=true docker compose --profile observabilidade up -d --build api
 npm run demo:trafego -- --erros --segundos=90
 ```
 
-Em cerca de 1 minuto o alerta `TaxaDeErroAlta` aparece como *firing* em http://localhost:9090/alerts. As regras ficam em `observabilidade/alertas.yml`. Os pedidos de teste ficam no volume do Docker; `docker compose down -v` volta o banco ao estado original.
+Em cerca de 1 minuto o alerta `TaxaDeErroAlta` aparece como *firing* em http://localhost:9090/alerts, os erros aparecem no Kibana e cada um tem o seu trace no Jaeger. As regras ficam em `observabilidade/alertas.yml`. Os pedidos de teste ficam no volume do Docker; `docker compose down -v` volta o banco ao estado original.
+
+### Como a telemetria liga
+
+- **Traces:** a API só carrega o OpenTelemetry quando a variável `OTEL_EXPORTER_OTLP_ENDPOINT` existe (no Docker Compose ela aponta para o Jaeger). Nos testes e no Render ela não existe, e a API funciona igual, sem custo extra.
+- **Logs no ELK:** com `LOG_ARQUIVO` definido, cada linha de log também vai para esse arquivo. No Docker Compose ele fica no volume `api-logs`, que o Logstash lê (`observabilidade/elk/logstash.conf`).
 
 ## Docker Hub
 
