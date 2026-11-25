@@ -30,7 +30,8 @@ mostrar() {
   local dns
   dns="$(endereco "$1")"
   echo "  Site: http://$dns"
-  echo "  API:  http://$dns:3000/health   (métricas em /metrics)"
+  echo "  API:  http://$dns/api/health   (métricas em /api/metrics)"
+  echo "  API direto na porta 3000: http://$dns:3000/health"
 }
 
 remover_instancia() {

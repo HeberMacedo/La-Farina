@@ -4,6 +4,7 @@ Projeto desenvolvido como solução web para gestão de pedidos de pizzaria, com
 
 ## Demonstração
 
+* **Na AWS (cloud provider):** http://ec2-15-229-252-34.sa-east-1.compute.amazonaws.com — site e API numa máquina EC2 em São Paulo. Saúde e métricas em [/api/health](http://ec2-15-229-252-34.sa-east-1.compute.amazonaws.com/api/health) e [/api/metrics](http://ec2-15-229-252-34.sa-east-1.compute.amazonaws.com/api/metrics). Veja [Deploy na AWS](#deploy-na-aws).
 * Aplicação web: https://hebermacedo.github.io/La-Farina/#/menu
 * API: https://api-tpizza-artesanal.onrender.com (publicada a partir do repositório [banco-json](https://github.com/HeberMacedo/banco-json), com o mesmo servidor de `server/server.js`)
 * Saúde e métricas da API: [/health](https://api-tpizza-artesanal.onrender.com/health) e [/metrics](https://api-tpizza-artesanal.onrender.com/metrics)
@@ -348,6 +349,39 @@ Em cerca de 1 minuto o alerta `TaxaDeErroAlta` aparece como *firing* em http://l
 
 - **Traces:** a API só carrega o OpenTelemetry quando a variável `OTEL_EXPORTER_OTLP_ENDPOINT` existe (no Docker Compose ela aponta para o Jaeger). Nos testes e no Render ela não existe, e a API funciona igual, sem custo extra.
 - **Logs no ELK:** com `LOG_ARQUIVO` definido, cada linha de log também vai para esse arquivo. No Docker Compose ele fica no volume `api-logs`, que o Logstash lê (`observabilidade/elk/logstash.conf`).
+
+## Deploy na AWS
+
+O La Farina também roda num cloud provider: uma máquina **Amazon EC2** (`t3.micro`, região `sa-east-1`, São Paulo) com dois containers Docker.
+
+```mermaid
+flowchart LR
+    U[Navegador] -->|porta 80| N[Container web<br/>Nginx + site Vue]
+    N -->|/api/...| A[Container api<br/>Node + JSON Server]
+    U -.->|porta 3000| A
+    subgraph EC2 [Amazon EC2 · São Paulo]
+        N
+        A
+    end
+```
+
+- O Nginx serve o site e repassa tudo que começa com `/api/` para a API (`deploy/aws/nginx.conf`). Assim o site usa o mesmo endereço da máquina e funciona em redes que bloqueiam a porta 3000.
+- Um *security group* (firewall da AWS) libera só as portas 80 e 3000.
+- Ao ligar, a máquina instala o Docker, baixa este repositório, monta as imagens do `Dockerfile` (estágios `api` e `production`) e sobe os dois containers, que reiniciam sozinhos se a máquina reiniciar.
+
+Para publicar, abra o **AWS CloudShell** (o terminal do console da AWS, que já vem logado) e rode:
+
+```bash
+curl -sL https://raw.githubusercontent.com/HeberMacedo/La-Farina/main/scripts/deploy-aws.sh | bash
+```
+
+Em 5 a 10 minutos ele mostra os endereços do site e da API. Outras ações do mesmo script:
+
+| Comando | O que faz |
+|---|---|
+| `... \| bash -s status` | Mostra os endereços |
+| `... \| bash -s atualizar` | Recria a máquina com a versão mais nova do GitHub |
+| `... \| bash -s remover` | Apaga a máquina e o firewall (para de cobrar) |
 
 ## Docker Hub
 
