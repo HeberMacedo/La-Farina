@@ -7,7 +7,9 @@
     "build": "vue-cli-service build",
     "bancojson": "node server/server.js",
     "start": "node server/server.js",
-    "test": "cross-env NODE_ENV=test jest --runInBand"
+    "test": "cross-env NODE_ENV=test jest --runInBand",
+    "test:coverage": "cross-env NODE_ENV=test jest --runInBand --coverage",
+    "demo:trafego": "node scripts/gerar-trafego.js"
   },
   "dependencies": {
     "core-js": "^3.8.3",
@@ -22,5 +24,17 @@
     "cross-env": "^10.1.0",
     "jest": "^29.7.0",
     "supertest": "^7.3.1"
+  },
+  "jest": {
+    "collectCoverageFrom": [
+      "server/**/*.js",
+      "src/services/**/*.js"
+    ],
+    "coverageReporters": [
+      "text",
+      "text-summary",
+      "html",
+      "json-summary"
+    ]
   }
 }

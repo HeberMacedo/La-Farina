@@ -24,6 +24,8 @@ Projeto desenvolvido como solução web para gestão de pedidos de pizzaria, com
 * JSON Server
 * Docker
 * GitHub Actions
+* Jest + Supertest (testes)
+* Prometheus + Grafana (observabilidade)
 
 ## Como executar localmente
 
@@ -78,22 +80,43 @@ O sistema atual cobre:
 - painel administrativo para acompanhamento do status dos pedidos;
 - validação client-side antes do envio de pedido e cadastro.
 
-O sistema não pretende ser um backend completo de produção com autenticação em JWT, banco relacional, filas de processamento ou observabilidade avançada. O escopo principal é demonstrar o fluxo do negócio de pizzaria em uma aplicação front-end conectada a uma API de mock/rest.
+O sistema não pretende ser um backend completo de produção com autenticação em JWT, banco relacional ou filas de processamento. A API tem uma camada básica de observabilidade (logs estruturados, métricas e health check), descrita na seção [Observabilidade](#observabilidade). O escopo principal é demonstrar o fluxo do negócio de pizzaria em uma aplicação front-end conectada a uma API de mock/rest.
 
 ### Tipos de teste aplicados
-- Teste de API/integração com Jest + Supertest: validam status HTTP e corpo das respostas dos endpoints da API em um banco temporário, sem alterar o banco real do projeto.
-- Validação client-side: confirma campos obrigatórios e blocos de navegação no front-end antes do envio.
+
+São 75 testes automatizados em 5 arquivos, com cerca de 92% das linhas cobertas.
+
+| Arquivo | Tipo | Testes | O que valida |
+|---|---|---|---|
+| `tests/api.test.js` | Integração (API) | 23 | Status HTTP e corpo de todas as rotas, fluxos de sucesso e de erro |
+| `tests/observabilidade.test.js` | Integração (API) | 22 | `/health`, `/metrics`, trace id, logs estruturados e tratamento de erros |
+| `tests/servicosFront.test.js` | Unidade (front-end) | 16 | Cliente HTTP, login, cadastro e chamadas de pedidos com a API simulada |
+| `tests/itensPedido.test.js` | Unidade (regra de negócio) | 10 | Várias pizzas, 1 ou 2 sabores, soma de valores |
+| `tests/entrega.test.js` | Unidade (regra de negócio) | 4 | Taxa de R$ 8,00 e frete grátis acima de R$ 80,00 |
+
+- Os testes de API usam Jest + Supertest em um banco temporário copiado de `db/db.json`, sem alterar o banco real do projeto.
+- Os testes do front-end trocam o `fetch` e o `localStorage` por versões falsas, então rodam sem rede e sem navegador.
 - Build de front-end: `npm run build` garante que o Vue compila corretamente.
 
 ### Pipeline de entrega
 
+Dois workflows rodam a cada push ou pull request na `main`:
+
 ```mermaid
 flowchart LR
-    A[Push na main] --> B[testes]
-    B --> C[build do frontend]
-    C --> D[login Docker Hub]
-    D --> E[publicação da imagem]
+    A[Push na main] --> B[npm ci]
+    B --> C[testes + cobertura]
+    C --> D[build do front-end]
+    D --> E[imagem Docker no Docker Hub]
+    A --> F[npm ci]
+    F --> G[testes]
+    G --> H[build]
+    H --> I[deploy no GitHub Pages]
 ```
+
+- `.github/workflows/ci.yml`: roda os testes com cobertura, publica o resumo da cobertura na página da execução, guarda o relatório HTML como artefato, gera o build e, só na `main`, publica a imagem no Docker Hub.
+- `.github/workflows/pages.yml`: roda os testes e só publica o site no GitHub Pages se todos passarem.
+- Em pull requests, os dois workflows testam e compilam, mas não publicam nada.
 
 ## Cenários para teste
 
@@ -174,17 +197,101 @@ flowchart LR
 - A API retorna `400` quando o nome do cliente ou o tamanho da pizza não são informados, conforme os cenários `API-13` e `API-14`.
 - A API retorna `404` quando o pedido solicitado não existe, como no cenário `API-18`.
 - A API retorna `500` apenas quando a falha interna é simulada com o header `X-Simulate-Error: true` em conjunto com `NODE_ENV=test`, como ocorre no cenário controlado do `npm test`.
-- Esse cenário não é acionado em produção ou no Docker local, porque a variável de ambiente não é definida como `test`.
+- Esse cenário não é acionado em produção nem no Docker local por padrão. Para a demonstração de observabilidade ele pode ser ligado no Docker com `SIMULAR_ERROS=true`.
 - As respostas de erro mantêm o formato padronizado e não expõem stack trace ao cliente.
 
 ## Como executar os testes
 
 ```bash
 npm install
-npm test
+npm test                # roda os 75 testes
+npm run test:coverage   # roda os testes e gera o relatório de cobertura em coverage/
 ```
 
-A suíte de testes usa `Jest + Supertest` para validar status e corpo das respostas da API em um banco temporário copiado de `db/db.json`, sem alterar o banco real do projeto.
+A suíte de testes usa `Jest + Supertest` para validar status e corpo das respostas da API em um banco temporário copiado de `db/db.json`, sem alterar o banco real do projeto. O relatório HTML fica em `coverage/lcov-report/index.html`.
+
+## Cenários de teste de observabilidade
+
+| ID | Cenário | Como é testado | Resultado esperado |
+|---|---|---|---|
+| OBS-01 | API saudável | `GET /health` | `200` com `{ "status": "ok" }` |
+| OBS-02 | Banco indisponível | Apaga o banco temporário e chama `GET /health` | `503` com `{ "status": "erro" }` |
+| OBS-03 | Trace id gerado | Qualquer requisição sem header | Resposta traz `X-Request-Id` com 32 caracteres hexadecimais |
+| OBS-04 | Trace id propagado | Envia `X-Request-Id` ou `traceparent` | A resposta devolve o mesmo id |
+| OBS-05 | Contagem de requisições | Duas chamadas a `/menu` e depois `/metrics` | `lafarina_http_requests_total{method="GET",route="/menu",status="200"} 2` |
+| OBS-06 | Rotas com id agrupadas | `GET /pedidos/1` e `/pedidos/2` | Uma única série `route="/pedidos/:id"` |
+| OBS-07 | Métrica de negócio | Cria dois pedidos (R$ 68 e R$ 40) | `lafarina_pedidos_criados_total 2` e `lafarina_pedidos_valor_reais_total 108` |
+| OBS-08 | Validação recusada | `POST /pedidos` sem nome | `lafarina_validacoes_rejeitadas_total{motivo="nome_do_cliente_e_obrigatorio"} 1` |
+| OBS-09 | Erro 500 contado | Falha simulada | Série com `status="500"` |
+| OBS-10 | Pedidos por status | Banco com 2 pedidos "Em preparo" | `lafarina_pedidos_por_status{status="Em preparo"} 2` |
+| OBS-11 | Log estruturado | Captura a saída do console | Linha JSON com `traceId`, `rota`, `status` e `duracaoMs` |
+| OBS-12 | Privacidade no log | `GET /usuarios?email=...` | O e-mail não aparece no log |
+| OBS-13 | JSON malformado | Corpo inválido no `POST /pedidos` | `400` com `{ "erro": "JSON inválido na requisição." }`, sem stack trace |
+
+## Cenários de teste das regras de negócio
+
+| ID | Cenário | Entrada | Resultado esperado |
+|---|---|---|---|
+| ENT-01 | Pedido abaixo do mínimo | Subtotal R$ 40,00 | Taxa de entrega R$ 8,00 |
+| ENT-02 | Frete no valor-limite | Subtotal R$ 80,00 | Taxa de entrega R$ 8,00 |
+| ENT-03 | Frete grátis | Subtotal R$ 80,01 ou mais | Taxa de entrega R$ 0,00 |
+| ENT-04 | Subtotal vazio ou inválido | `0` ou `undefined` | Taxa de entrega R$ 8,00 |
+| PED-01 | Pizza meio a meio | Tamanho e 2 sabores | Pizza válida |
+| PED-02 | Pizza sem tamanho | Só sabores | "Escolha o tamanho da pizza." |
+| PED-03 | Pizza sem sabor | Tamanho sem sabores | "Escolha pelo menos 1 sabor para a pizza." |
+| PED-04 | Pizza com 3 sabores | Tamanho e 3 sabores | "Escolha no máximo 2 sabores por pizza." |
+| PED-05 | Valor de uma pizza | Família (R$ 65) + borda (R$ 8) | R$ 73,00 |
+| PED-06 | Pedido no formato antigo | Uma pizza no topo do pedido | Vira lista com 1 pizza |
+
+## Cenários de teste do front-end
+
+| ID | Cenário | Resultado esperado |
+|---|---|---|
+| FRONT-01 | API responde erro de validação | A tela recebe a mensagem do campo `erro` |
+| FRONT-02 | API fora do ar | A chamada falha com erro em vez de travar |
+| FRONT-03 | Login com senha errada ou e-mail inexistente | Mesma mensagem: "E-mail ou senha incorretos." |
+| FRONT-04 | Login correto | Usuário salvo no navegador sem a senha |
+| FRONT-05 | Cadastro com e-mail repetido | Bloqueado antes de criar a conta |
+| FRONT-06 | Pedido novo | Enviado com status 5 (pendente) e data de criação |
+| FRONT-07 | Admin aceita pedido | `PATCH` com status 1 (recebido) |
+
+## Observabilidade
+
+A API (`server/observabilidade.js`) gera os três sinais de observabilidade sem bibliotecas externas:
+
+| Sinal | Onde ver | O que tem |
+|---|---|---|
+| Logs | Saída da API (`docker compose logs api`) | Uma linha JSON por requisição: horário, nível, trace id, rota, status, duração e motivo do erro |
+| Métricas | `GET /metrics` (formato Prometheus) | Requisições por rota e status, latência, pedidos criados, valor vendido, validações recusadas e pedidos por status |
+| Traces | Header `X-Request-Id` | Um id por requisição, no formato de trace do OpenTelemetry, presente em todos os logs daquela requisição |
+| Saúde | `GET /health` | `200` quando a API lê o banco, `503` quando não consegue |
+
+### Subir Prometheus e Grafana
+
+```bash
+docker compose --profile observabilidade up -d --build
+```
+
+| Serviço | Endereço |
+|---|---|
+| API | http://localhost:3000 (métricas em `/metrics`) |
+| Prometheus | http://localhost:9090 (alertas em `/alerts`) |
+| Grafana | http://localhost:3001 (painel "La Farina — API" abre direto) |
+
+Para gerar tráfego e ver os gráficos se mexendo:
+
+```bash
+npm run demo:trafego                    # 60 s de tráfego normal
+```
+
+Para demonstrar um alerta, suba a API aceitando falhas simuladas e gere tráfego com erros:
+
+```bash
+SIMULAR_ERROS=true docker compose --profile observabilidade up -d --build
+npm run demo:trafego -- --erros --segundos=90
+```
+
+Em cerca de 1 minuto o alerta `TaxaDeErroAlta` aparece como *firing* em http://localhost:9090/alerts. As regras ficam em `observabilidade/alertas.yml`. Os pedidos de teste ficam no volume do Docker; `docker compose down -v` volta o banco ao estado original.
 
 ## Docker Hub
 

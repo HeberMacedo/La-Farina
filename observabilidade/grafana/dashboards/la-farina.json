@@ -1,0 +1,651 @@
+{
+  "uid": "la-farina-api",
+  "title": "La Farina — API",
+  "tags": [
+    "la-farina"
+  ],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "5s",
+  "time": {
+    "from": "now-15m",
+    "to": "now"
+  },
+  "editable": true,
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "API no ar",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus-lafarina"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 4,
+        "h": 5
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus-lafarina"
+          },
+          "refId": "A",
+          "expr": "up{job=\"la-farina-api\"}",
+          "legendFormat": "__auto",
+          "range": true,
+          "instant": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "FORA DO AR",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "NO AR",
+                  "color": "green"
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value"
+      },
+      "description": "1 = o Prometheus conseguiu ler o /metrics da API; 0 = API fora do ar."
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Requisições por segundo",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus-lafarina"
+      },
+      "gridPos": {
+        "x": 4,
+        "y": 0,
+        "w": 5,
+        "h": 5
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus-lafarina"
+          },
+          "refId": "A",
+          "expr": "sum(rate(lafarina_http_requests_total[1m]))",
+          "legendFormat": "__auto",
+          "range": true,
+          "instant": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "area",
+        "textMode": "value"
+      }
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Taxa de erro (5xx)",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus-lafarina"
+      },
+      "gridPos": {
+        "x": 9,
+        "y": 0,
+        "w": 5,
+        "h": 5
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus-lafarina"
+          },
+          "refId": "A",
+          "expr": "(sum(rate(lafarina_http_requests_total{status=~\"5..\"}[1m])) or vector(0)) / sum(rate(lafarina_http_requests_total[1m]))",
+          "legendFormat": "__auto",
+          "range": true,
+          "instant": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 0.01
+              },
+              {
+                "color": "red",
+                "value": 0.05
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "area",
+        "textMode": "value"
+      },
+      "description": "Parte das requisições que terminou em erro do servidor. Acima de 5% dispara o alerta TaxaDeErroAlta."
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Latência p95",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus-lafarina"
+      },
+      "gridPos": {
+        "x": 14,
+        "y": 0,
+        "w": 5,
+        "h": 5
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus-lafarina"
+          },
+          "refId": "A",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(lafarina_http_request_duration_seconds_bucket[5m])))",
+          "legendFormat": "__auto",
+          "range": true,
+          "instant": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 0.25
+              },
+              {
+                "color": "red",
+                "value": 0.5
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "area",
+        "textMode": "value"
+      },
+      "description": "95% das requisições responderam em até este tempo."
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Pedidos criados",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus-lafarina"
+      },
+      "gridPos": {
+        "x": 19,
+        "y": 0,
+        "w": 5,
+        "h": 5
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus-lafarina"
+          },
+          "refId": "A",
+          "expr": "lafarina_pedidos_criados_total",
+          "legendFormat": "__auto",
+          "range": true,
+          "instant": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "purple",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "area",
+        "textMode": "value"
+      },
+      "description": "Pedidos criados com sucesso desde que a API subiu."
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "Requisições por rota (req/s)",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus-lafarina"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 5,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus-lafarina"
+          },
+          "refId": "A",
+          "expr": "sum by (route) (rate(lafarina_http_requests_total[1m]))",
+          "legendFormat": "{{route}}",
+          "range": true,
+          "instant": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "options": {}
+    },
+    {
+      "id": 7,
+      "type": "timeseries",
+      "title": "Respostas por status HTTP (req/s)",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus-lafarina"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 5,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus-lafarina"
+          },
+          "refId": "A",
+          "expr": "sum by (status) (rate(lafarina_http_requests_total[1m]))",
+          "legendFormat": "{{status}}",
+          "range": true,
+          "instant": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "options": {}
+    },
+    {
+      "id": 8,
+      "type": "timeseries",
+      "title": "Latência p95 por rota",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus-lafarina"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 13,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus-lafarina"
+          },
+          "refId": "A",
+          "expr": "histogram_quantile(0.95, sum by (le, route) (rate(lafarina_http_request_duration_seconds_bucket[5m])))",
+          "legendFormat": "{{route}}",
+          "range": true,
+          "instant": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "options": {}
+    },
+    {
+      "id": 9,
+      "type": "bargauge",
+      "title": "Pedidos na fila por status (agora)",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus-lafarina"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 13,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus-lafarina"
+          },
+          "refId": "A",
+          "expr": "lafarina_pedidos_por_status",
+          "legendFormat": "{{status}}",
+          "range": true,
+          "instant": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "horizontal",
+        "displayMode": "basic",
+        "showUnfilled": true,
+        "text": {
+          "titleSize": 13,
+          "valueSize": 18
+        }
+      }
+    },
+    {
+      "id": 10,
+      "type": "stat",
+      "title": "Valor vendido",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus-lafarina"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 21,
+        "w": 6,
+        "h": 8
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus-lafarina"
+          },
+          "refId": "A",
+          "expr": "lafarina_pedidos_valor_reais_total",
+          "legendFormat": "__auto",
+          "range": true,
+          "instant": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyBRL",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "area",
+        "textMode": "value"
+      },
+      "description": "Soma do total dos pedidos criados desde que a API subiu."
+    },
+    {
+      "id": 11,
+      "type": "bargauge",
+      "title": "Validações recusadas por motivo (últimos 5 min)",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus-lafarina"
+      },
+      "gridPos": {
+        "x": 6,
+        "y": 21,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus-lafarina"
+          },
+          "refId": "A",
+          "expr": "round(sum by (motivo) (increase(lafarina_validacoes_rejeitadas_total[5m])))",
+          "legendFormat": "{{motivo}}",
+          "range": true,
+          "instant": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "orange",
+                "value": null
+              }
+            ]
+          },
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "horizontal",
+        "displayMode": "basic",
+        "showUnfilled": true,
+        "text": {
+          "titleSize": 13,
+          "valueSize": 18
+        }
+      },
+      "description": "Pedidos e cadastros barrados pela validação da API. Um pico aqui costuma indicar bug no formulário do site."
+    },
+    {
+      "id": 12,
+      "type": "timeseries",
+      "title": "Memória da API",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus-lafarina"
+      },
+      "gridPos": {
+        "x": 18,
+        "y": 21,
+        "w": 6,
+        "h": 8
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus-lafarina"
+          },
+          "refId": "A",
+          "expr": "process_resident_memory_bytes{job=\"la-farina-api\"}",
+          "legendFormat": "memória",
+          "range": true,
+          "instant": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "options": {}
+    }
+  ],
+  "annotations": {
+    "list": []
+  },
+  "templating": {
+    "list": []
+  }
+}

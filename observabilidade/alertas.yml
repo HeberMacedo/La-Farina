@@ -1,0 +1,40 @@
+# Regras de alerta: avisam ANTES que o cliente reclame.
+# Aparecem na aba "Alerts" do Prometheus (http://localhost:9090/alerts).
+groups:
+  - name: la-farina
+    rules:
+      - alert: ApiForaDoAr
+        expr: up{job="la-farina-api"} == 0
+        for: 30s
+        labels:
+          severidade: critica
+        annotations:
+          resumo: "A API do La Farina não responde ao Prometheus há 30 segundos."
+
+      - alert: TaxaDeErroAlta
+        expr: |
+          sum(rate(lafarina_http_requests_total{status=~"5.."}[1m]))
+            / sum(rate(lafarina_http_requests_total[1m])) > 0.05
+        for: 30s
+        labels:
+          severidade: critica
+        annotations:
+          resumo: "Mais de 5% das requisições estão falhando com erro 5xx."
+
+      - alert: ApiLenta
+        expr: |
+          histogram_quantile(0.95,
+            sum by (le) (rate(lafarina_http_request_duration_seconds_bucket[5m]))) > 0.5
+        for: 2m
+        labels:
+          severidade: aviso
+        annotations:
+          resumo: "95% das requisições estão levando mais de 0,5 s."
+
+      - alert: MuitosPedidosRecusados
+        expr: sum(increase(lafarina_validacoes_rejeitadas_total{route="/pedidos"}[5m])) > 20
+        for: 1m
+        labels:
+          severidade: aviso
+        annotations:
+          resumo: "Muitos pedidos recusados pela validação: pode ser um bug no formulário do site."

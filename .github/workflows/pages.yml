@@ -27,11 +27,15 @@ jobs:
       - name: Configurar Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
       - name: Instalar dependencias
         run: npm ci
+
+      # O site so e publicado se todos os testes passarem.
+      - name: Rodar testes
+        run: npm test
 
       - name: Gerar build
         run: npm run build
